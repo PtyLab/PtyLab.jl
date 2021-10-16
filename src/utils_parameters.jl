@@ -1,9 +1,14 @@
 import Base.@kwdef
 
-export Parameters
+export init_Parameters
 
+"""
+    Parameters{T}
+
+Struct storing all parameters.
+"""
 @kwdef struct Parameters{T}
-    wavelength::Union{T, Nothing}
+    wavelength::T
     # probe sampling
     dxp::T
     Np::Int
@@ -13,7 +18,7 @@ export Parameters
     # object sampling
     dxo::T
     No::Int
-    xo::T
+    xo::Vector{T}
     Lo::T
     zo::T
     # detector sampling
@@ -23,28 +28,48 @@ export Parameters
     Ld::T
     # the general data type which is enforced
     dtype::Type{T}
-    
-    # function Parameters(;
-    #     wavelength = 632.8e-9,
-    #     # probe
-    #     dxp=nothing,
-    #     Np=2^7,
-    #     Lp=nothing,
-    #     zp=nothing,
-    #     # object
-    #     dxo=nothing,
-    #     No=2^7,
-    #     Lo=nothing,
-    #     zo=nothing,
-    #     # detector
-    #     dxd=dxp,
-    #     Nd=2^9,
-    #     Ld=nothing,
-    #     )
-
 end
 
-function Parameters(;
+"""
+    init_Parameters(<kwargs>)
+
+Function to return parameter object storing
+all meta information needed for reconstruction.
+Note that can access all those parameters but many
+of them are connected hence to fill the struct we only need a few of
+them.
+
+# Parameters
+ 
+## Physical Properties
+* `wavelength` of the laser
+
+## General Properties
+
+* `dtype`: datatype used for reconstructions. `Float32` is usually faster, especially on GPUs.
+
+## Probe
+* `dxp`: pixel size
+* `Np`: number of pixels
+* `xp`: 1D coordinates 
+* `Lp`: field of view probe (field size)
+* `zp`: distance to next plane
+
+## Object 
+* `dxo`: pixel size
+* `No`: number of pixels
+* `xo`: 1D coordinates 
+* `Lo`: field of view probe (field size)
+* `zo`: distance to next plane
+
+## Detector
+* `dxd`: pixel size
+* `Nd`: number of pixels
+* `xd`: 1D coordinates 
+* `Ld`: field of view probe (field size)
+
+"""
+function init_Parameters(;
         wavelength=DEFAULT_WAVELENGTH, 
         No=2^7,
         Nd=2^9,
@@ -54,7 +79,6 @@ function Parameters(;
         zp=nothing
         )
 
-    # @show "lol"
     Ld = Nd * dxd
     # probe stuff
     dxp = wavelength * zo / Ld       
@@ -69,7 +93,7 @@ function Parameters(;
 
     _dtype(x) = isnothing(x) ? x : dtype(x)
     
-    Parameters(;
+    Parameters(
         wavelength=_dtype(wavelength),
         # probe sampling
         dxp=_dtype(dxp),
@@ -87,10 +111,9 @@ function Parameters(;
         dxd=_dtype(dxd),
         Nd=Nd,
         xd=_dtype.(xd),
-        Ld=Ld,
+        Ld=_dtype(Ld),
         # the general data type which is enforced,
-        dtype=dtype
-    )
+        dtype=dtype)
 end
 
 
