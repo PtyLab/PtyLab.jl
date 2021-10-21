@@ -50,7 +50,7 @@ function grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10)
             i_pos = clamp(random_constrained_wiggle(i, is, rand_offset), 1, grid_size[1] - tile_size[1])
             j_pos = clamp(random_constrained_wiggle(j, js, rand_offset), 1, grid_size[2] - tile_size[2])
             # save tile 
-            push!(grr.tiles, Tile(i_pos, i_pos + tile_size[1], j_pos, j_pos + tile_size[2])) 
+            push!(grr.tiles, Tile(i_pos, i_pos + tile_size[1] - 1, j_pos, j_pos + tile_size[2] - 1)) 
         end
     end
     return grr 

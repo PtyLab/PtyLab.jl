@@ -20,8 +20,8 @@
             @test t.j₁ >= 1
             @test t.i₂ <= grid_size[1]
             @test t.j₂ <= grid_size[2]
-            @test (-t.i₁ + t.i₂) == tile_size[1]
-            @test (-t.j₁ + t.j₂) == tile_size[2]
+            @test (-t.i₁ + t.i₂ + 1) == tile_size[1]
+            @test (-t.j₁ + t.j₂ + 1) == tile_size[2]
         end
     end
 
