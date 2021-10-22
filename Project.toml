@@ -5,9 +5,10 @@ version = "0.1.0"
 
 [deps]
 ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
+EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 FourierTools = "b18b359b-aebc-45ac-a139-9c0ccbb2871e"
-
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

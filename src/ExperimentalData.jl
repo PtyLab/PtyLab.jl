@@ -1,161 +1,156 @@
-export ExperimentalData
+export ExperimentalDataCPM
 export initializeExperimentalData
 
 """
-    ExperimentalData{T}
+    ExperimentalDataCPM{T}
 
-`mutable struct` stores all parameters.
-
-# Parameters
- 
-## Physical Properties
-* `wavelength` of the laser
-
-## General Properties
-
-* `dtype`: datatype used for reconstructions. `Float32` is usually faster, especially on GPUs.
-* `propagator`: 
-
-## Probe
-* `dxp`: pixel size
-* `Np`: number of pixels
-* `xp`: 1D coordinates 
-* `Lp`: field of view probe (field size)
-* `zp`: distance to next plane
-
-## Object 
-* `dxo`: pixel size
-* `No`: number of pixels
-* `xo`: 1D coordinates 
-* `Lo`: field of view probe (field size)
-* `zo`: distance to next plane
-
-## Detector
-* `dxd`: pixel size
-* `Nd`: number of pixels
-* `xd`: 1D coordinates 
-* `Ld`: field of view probe (field size)
-
-
+`mutable struct` stores all parameters for a CPM dataset
 """
-@kwdef mutable struct ExperimentalData{T}
+@kwdef mutable struct ExperimentalDataCPM{T}
+    ptychogram::Union{Nothing, Array{T, N}} where N
+    numFrames::Int
+    energyAtPos::Vector{T}
+    maxProbePower::T
     wavelength::T
-    # probe sampling
-    dxp::T
-    Np::Int
-    xp::Vector{T}
-    Lp::T
-    zp::Union{T, Nothing}
-    entrancePupilDiameter::Union{T, Nothing}
-    # object sampling
-    dxo::T
-    No::Int
-    xo::Vector{T}
-    Lo::T
-    zo::T
+    encoder::Union{Nothing, Array{T, 2}}
     # detector sampling
     dxd::T
     Nd::Int
     xd::Vector{T}
     Ld::T
-    # the general data type which is enforced
-    dtype::Type{T}
-    ptychogram::Union{Nothing, Array{T, N}} where N
-    encoder::Union{Nothing, Array{T, 2}}
+    # distance to detector 
+    zo::T
+    # optional parameters
+    entrancePupilDiameter::Union{Nothing, T}
+    spectralDensity::Union{Nothing, T}
+    theta::Union{Nothing, T}
 end
 
 """
-    ExperimentalData(fileName::String)
+    ExperimentalDataFPM{T}
 
-Fill the `ExperimentalData` struct with data from a `*.hdf5` file.
+`mutable struct` stores all parameters for a FPM dataset
+
 """
-function ExperimentalData(fileName::String, mode=CPM::CPM)
+@kwdef mutable struct ExperimentalDataFPM{T}
+    ptychogram::Union{Nothing, Array{T, N}} where N
+    wavelength::T
+    encoder::Union{Nothing, Array{T, 2}}
+    # detector sampling
+    dxd::T
+    # distance to detector 
+    zo::T
+    zled::T
+    # optional parameters
+    magnfication::Union{Nothing, T}
+    dxp::Union{Nothing, T}
+end
+
+
+"""
+    ExperimentalDataCPM(fileName::String)
+
+Fill the `ExperimentalDataCPM` struct with data from a `*.hdf5` file.
+"""
+function ExperimentalDataCPM(fileName::String)
     # open h5 file
     fid = HDF5.h5open(fileName)
    
     # function to extract number from a vector wrap
-    r_number(x) = read(fid, x)[begin]
+    r_number(x) = haskey(fid, x) ? read(fid, x)[begin] : nothing
     # read arrays, take full
-    r_array(x) = read(fid, x)
-    # call a simple constructor and fill with data
-    expData = initializeExperimentalData(
-            # those numbers are stored as arrays, take first element
-            wavelength=r_number("wavelength"),
-            No=r_number("No"),
-            Nd=r_number("Nd"),
-            dxd=r_number("dxd"),
-            zo=r_number("zo"),
-            entrancePupilDiameter=r_number("encoder"),
-            # those are arrays, keep them
-            ptychogram=r_array("ptychogram"),
-            encoder=r_array("encoder"),
+    r_array(x) = haskey(fid, x) ? read(fid, x) : nothing
+
+    # data
+    ptychogram = r_array("ptychogram")
+    encoder = r_array("encoder")
+
+    # physics
+    wavelength=r_number("wavelength")
+   
+    # object
+    zo = r_number("zo")
+    # detector
+    dxd = r_number("dxd")
+
+    # optional
+    entrancePupilDiameter = r_number("entrancePupilDiameter")
+    spectralDensity = r_number("spectralDensity")
+    theta = r_number("theta")
+
+   
+
+    # derived properties
+    Nd = calc_Nd(ptychogram)
+    xd = calc_xd(Nd, dxd)
+    Ld = calc_Ld(Nd, dxd)
+    numFrames = calc_numFrames(ptychogram)
+    energyAtPos = calc_energyAtPos(ptychogram)
+    maxProbePower = calc_maxProbePower(ptychogram)
+
+    # create ExperimentalDataCPM struct
+    expData = ExperimentalDataCPM(;
+            ptychogram,
+            numFrames,
+            energyAtPos,
+            maxProbePower,
+            wavelength,
+            encoder,
+            dxd,
+            Nd,
+            xd,
+            Ld,
+            zo,
+            entrancePupilDiameter,
+            spectralDensity,
+            theta 
         )
 
     return expData
 end
 
+
+
+ # some helper functions
 """
-    initializeExperimentalData(<kwargs>)
+    calc_Nd(ptychogram)
 
-Function to return parameter object `mutable struct` storing
-all meta information needed for reconstruction.
-Note that you can access all those parameters but many
-of them are connected hence to fill the struct we only need a few of
-them.
+How many pixels per dimension.
 """
-function initializeExperimentalData(;
-        wavelength=DEFAULT_WAVELENGTH, 
-        No=2^7,
-        Nd=2^9,
-        dxd=4.5e-6,
-        zo=50e-3,
-        dtype=Float32,
-        zp=nothing,
-        entrancePupilDiameter=nothing,
-        ptychogram=nothing,
-        encoder=nothing,
-        )
+calc_Nd(ptychogram) = size(ptychogram, 1)
+        
+"""
+    calc_xd(Nd, dxd)
 
-    # detector
-    Ld = Nd * dxd
-    xd = FourierTools.fftpos(Ld, Nd) 
-    # probe 
-    dxp = wavelength * zo / Ld       
-    Np = Nd
-    Lp = dxp*Np
-    xp = FourierTools.fftpos(Lp, Np) 
-    # object 
-    dxo = dxp
-    Lo = dxo * No
-    xo = FourierTools.fftpos(Lo, No) 
+Calculate detector coordinates in 1D.
+"""
+calc_xd(Nd, dxd) = typeof(dxd).(dxd .* range(-Nd / 2, Nd / 2, length=Nd))
+        
+"""
+    calc_Ld(Nd, dxd)
 
-    # anonymous function to convert to the dtype
-    _dtype(x) = isnothing(x) ? x : dtype(x)
-    
+Calculate the size of the detector.
+"""
+calc_Ld(Nd, dxd) = Nd * dxd
 
-    # fill struct
-    ExperimentalData(
-        wavelength=_dtype(wavelength),
-        # probe sampling
-        dxp=_dtype(dxp),
-        Np=Np,
-        xp=_dtype.(xp),
-        Lp=_dtype(Lp),
-        zp=_dtype(zp),
-        # object sampling,
-        dxo=_dtype(dxo),
-        No=No,
-        xo=_dtype.(xo),
-        Lo=_dtype(Lo),
-        zo=_dtype(zo),
-        # detector sampling,
-        dxd=_dtype(dxd),
-        Nd=Nd,
-        entrancePupilDiameter=dtype(entrancePupilDiameter),
-        xd=_dtype.(xd),
-        Ld=_dtype(Ld),
-        # the general data type which is enforced,
-        dtype=dtype,
-        ptychogram=dtype.(ptychogram)),
-        encoder=dtype.(encoder)
-end
+"""
+    calc_numFrames(ptychogram)
+
+Calculate the number of frames.
+"""
+calc_numFrames(ptychogram) = size(ptychogram)[end]
+
+
+"""
+    calc_energyAtPos(ptychogram)
+
+Calculate the energy at each position.
+"""
+calc_energyAtPos(ptychogram) = sum(abs, ptychogram, dims=(1,2))[1, 1, ..]
+
+"""
+    calc_maxProbePower(ptychogram)
+
+Calculate max probe power at each position.
+"""
+calc_maxProbePower(ptychogram) = sqrt(maximum(sum(ptychogram, dims=(1,2))))
