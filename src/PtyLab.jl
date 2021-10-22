@@ -6,6 +6,9 @@ using FFTW, FourierTools
 using ColorTypes
  # data loading
 using HDF5 
+ # makes .. possible of array
+using EllipsisNotation
+
 
  # @kwdef macro
 import Base.@kwdef
@@ -20,8 +23,9 @@ abstract type CPM <: ModePtychograpy end
 abstract type FPM <: ModePtychograpy end
 
 
-include("utils_parameters.jl")
 include("ExperimentalData.jl")
+include("Reconstruction.jl")
+
 include("utils_grid.jl")
 include("utils_display.jl")
 
