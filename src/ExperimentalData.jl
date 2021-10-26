@@ -1,11 +1,15 @@
 export ExperimentalDataCPM
 
+
+abstract type ExperimentalData{T} end
+
+
 """
     ExperimentalDataCPM{T}
 
 `mutable struct` stores all parameters for a CPM dataset
 """
-@kwdef mutable struct ExperimentalDataCPM{T}
+@kwdef mutable struct ExperimentalDataCPM{T} <: ExperimentalData{T}
     ptychogram::Union{Nothing, Array{T, N}} where N
     numFrames::Int
     energyAtPos::Vector{T}
@@ -31,7 +35,7 @@ end
 `mutable struct` stores all parameters for a FPM dataset
 
 """
-@kwdef mutable struct ExperimentalDataFPM{T}
+@kwdef mutable struct ExperimentalDataFPM{T} <: ExperimentalData{T}
     ptychogram::Union{Nothing, Array{T, N}} where N
     wavelength::T
     encoder::Union{Nothing, Array{T, 2}}
@@ -60,117 +64,46 @@ function ExperimentalDataCPM(fileName::String)
     # read arrays, take full
     r_array(x) = haskey(fid, x) ? read(fid, x) : nothing
 
+    # we work here with a dict since that makes passing
+    # the variables around more convenient
+    d = Dict()
     # data
-    ptychogram = r_array("ptychogram")
-    encoder = r_array("encoder")
+    d[:ptychogram] = r_array("ptychogram")
+    d[:encoder] = r_array("encoder")
 
     # physics
-    wavelength=r_number("wavelength")
+    d[:wavelength] =r_number("wavelength")
    
     # object
-    zo = r_number("zo")
+    d[:zo] = r_number("zo")
     # detector
-    dxd = r_number("dxd")
+    d[:dxd] = r_number("dxd")
 
     # optional
-    entrancePupilDiameter = r_number("entrancePupilDiameter")
-    spectralDensity = r_number("spectralDensity")
-    theta = r_number("theta")
+    d[:entrancePupilDiameter] = r_number("entrancePupilDiameter")
+    d[:spectralDensity] = r_number("spectralDensity")
+    d[:theta] = r_number("theta")
 
    
 
     # derived properties
-    Nd = calc_Nd(ptychogram)
-    xd = calc_xd(Nd, dxd)
-    Ld = calc_Ld(Nd, dxd)
-    numFrames = calc_numFrames(ptychogram)
-    energyAtPos = calc_energyAtPos(ptychogram)
-    maxProbePower = calc_maxProbePower(ptychogram)
+    d[:Nd] = calc_Nd(d[:ptychogram])
+    d[:xd] = calc_xd(d[:Nd], d[:dxd])
+    d[:Ld] = calc_Ld(d[:Nd], d[:dxd])
+    d[:numFrames] = calc_numFrames(d[:ptychogram])
+    d[:energyAtPos] = calc_energyAtPos(d[:ptychogram])
+    d[:maxProbePower] = calc_maxProbePower(d[:ptychogram])
 
     # create ExperimentalDataCPM struct
-    expData = ExperimentalDataCPM(;
-            ptychogram,
-            numFrames,
-            energyAtPos,
-            maxProbePower,
-            wavelength,
-            encoder,
-            dxd,
-            Nd,
-            xd,
-            Ld,
-            zo,
-            entrancePupilDiameter,
-            spectralDensity,
-            theta 
-        )
-
+    expData = ExperimentalDataCPM(;d...)
     return expData
 end
 
 
+function Base.getproperty(expData::ExperimentalData, sym::Symbol)
+    return getfield(expData, sym)
+    # if hasproperty(expData, sym)
+    #     return getfield(expData, sym)
+    # end
+end
 
- # some helper functions
-"""
-    calc_Nd(ptychogram)
-
-How many pixels per dimension.
-"""
-calc_Nd(ptychogram) = size(ptychogram, 1)
-        
-
-"""
-    calc_xd(Nd, dxd)
-
-Calculate detector coordinates in 1D.
-"""
-calc_xd(Nd, dxd) = typeof(dxd).(dxd .* range(-Nd / 2, Nd / 2, length=Nd))
-        
-
-"""
-    calc_Ld(Nd, dxd)
-
-Calculate the size of the detector.
-"""
-calc_Ld(Nd, dxd) = Nd * dxd
-
-
-"""
-    calc_numFrames(ptychogram)
-
-Calculate the number of frames.
-"""
-calc_numFrames(ptychogram) = size(ptychogram)[end]
-
-
-"""
-    calc_energyAtPos(ptychogram)
-
-Calculate the energy at each position.
-"""
-calc_energyAtPos(ptychogram) = sum(abs, ptychogram, dims=(1,2))[1, 1, ..]
-
-
-"""
-    calc_maxProbePower(ptychogram)
-
-Calculate max probe power at each position.
-"""
-calc_maxProbePower(ptychogram) = sqrt(maximum(sum(ptychogram, dims=(1,2))))
-
-
-"""
-    calc_Lp(Np, dxp)
-
-Calculate probe length
-"""
-calc_Lp(Np, dxp) = Np * dxp
-
-
-
-"""
-    calc_Np(Nd)
-
-Calculate probe pixel
-"""
-calc_Np(Nd) = Nd

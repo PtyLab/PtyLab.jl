@@ -1,5 +1,7 @@
 export grid_regular_rand
 
+abstract type PositionOrder end 
+
 """
     Tile(i₁, i₂, j₁, j₂)
 
