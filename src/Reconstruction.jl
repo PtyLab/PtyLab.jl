@@ -137,6 +137,8 @@ function Base.getproperty(recCPM::ReconstructionCPM, sym::Symbol)
         return calc_xo(recCPM.No, recCPM.dxo)
     elseif sym === :NAd
         return calc_NAd(recCPM.Ld, recCPM.zo) 
+    elseif sym === :positions
+        return calc_positions(CPM, recCPM.encoder, recCPM.dxo, recCPM.No, recCPM.Np) 
     else
         error("$(sym) is not a field or dependent field.")
     end
@@ -158,12 +160,13 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
     end
 
     if recCPM.initialProbe === InitialProbeCirc
-        recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(data.Nd))) .* ones(T, recCPM.shape_O) 
+        # recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(recCPM.Nd)), recCPM.dxp) .* ones(T, recCPM.shape_O) 
+        recCPM.probe = circ(recCPM.shape_P, recCPM.xp, recCPM.entrancePupilDiameter) .* ones(T, recCPM.shape_P) 
     else
         error("InitialProbe = $(recCPM.initialProbe) not valid")
     end    
 
-    return nothing
+    return recCPM 
 end
 
 

@@ -117,4 +117,13 @@ calc_Lo(No, dxo) = No * dxp
 
 
 
+"""
+    calc_positions(::CPM, encoder, dxo, No, Np)
+
+Calculate the positions in pixels from the `encoder` in meter.
+"""
+function calc_positions(::CPM, encoder, dxo, No, Np) 
+    positions = round.(Int, encoder ./ dxo) .+ No ÷ 2 .- Np ÷ 2
+    return positions
+end
 

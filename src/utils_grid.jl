@@ -20,7 +20,7 @@ end
 
 Defines a regular grid which has random offsets.
 """
-struct GridRegularRand
+struct GridRegularRand <: PositionOrder
     grid_size::Tuple{Int, Int}
     tile_size::Tuple{Int, Int}
     tiles::Vector{Tile}

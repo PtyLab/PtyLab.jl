@@ -1,3 +1,9 @@
+export Params
+
+
+abstract type IntensityConstraint end
+abstract type IntensityConstraintStandard end
+
 
 """
 Some settings are shared in between different optimizers, such as the type of propagatorType that you intend to use,
@@ -12,9 +18,9 @@ This ensures that code like this will work as expected:
     FourierMaskSwitch::Bool = false
     CPSCswitch::Bool = false
     CPSCupsamplingFactor::Bool = false
-    intensityConstraint::String = "standard"
+    intensityConstraint::Type{<:IntensityConstraint} = IntensityConstraintStandard 
     propagatorType::Function = Fraunhofer
-    momentumAcceleration::Bool = False
-    adaptiveMomentumAcceleration::Bool = False
-    positionOrder::PositionOrder = GridRegularRand
+    momentumAcceleration::Bool = false
+    adaptiveMomentumAcceleration::Bool = false
+    positionOrder::Type{<:PositionOrder} = GridRegularRand
 end
