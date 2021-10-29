@@ -34,6 +34,7 @@ include("ExperimentalData.jl")
 include("Reconstruction.jl")
 include("Params.jl")
 include("Operators.jl")
+include("Engines.jl")
 
 include("utils.jl")
 include("utils_calc.jl")

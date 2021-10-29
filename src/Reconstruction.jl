@@ -50,8 +50,8 @@ abstract type Reconstruction end
     initialObject::Type{<:InitialObject}
     initialProbe::Type{<:InitialProbe}
     # reconstructions
-    object::Union{Nothing, Array{T, 6}}
-    probe::Union{Nothing, Array{T, 6}}
+    object::Union{Nothing, Array{Complex{T}, 6}}
+    probe::Union{Nothing, Array{Complex{T}, 6}}
 end
 
 
@@ -154,14 +154,14 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
 
     if recCPM.initialObject === InitialObjectOnes
         @show recCPM.shape_O
-        recCPM.object = ones(T, recCPM.shape_O) 
+        recCPM.object = ones(Complex{T}, recCPM.shape_O) 
     else
         error("InitialObject = $(recCPM.initialObject) not valid")
     end
 
     if recCPM.initialProbe === InitialProbeCirc
         # recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(recCPM.Nd)), recCPM.dxp) .* ones(T, recCPM.shape_O) 
-        recCPM.probe = circ(recCPM.shape_P, recCPM.xp, recCPM.entrancePupilDiameter) .* ones(T, recCPM.shape_P) 
+        recCPM.probe = circ(recCPM.shape_P, recCPM.xp, recCPM.entrancePupilDiameter) .* ones(Complex{T}, recCPM.shape_P) 
     else
         error("InitialProbe = $(recCPM.initialProbe) not valid")
     end    

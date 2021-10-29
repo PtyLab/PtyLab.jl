@@ -2,7 +2,7 @@ export Params
 
 
 abstract type IntensityConstraint end
-abstract type IntensityConstraintStandard end
+abstract type IntensityConstraintStandard <: IntensityConstraint end
 
 
 """
