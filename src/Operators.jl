@@ -12,7 +12,7 @@ efficiently between object and detector back and forth
 julia> 
 ```
 """
-function Fraunhofer(arr, rec, params; shift=false, dims=(1,2))
+function Fraunhofer(arr, rec, params; shift=true, dims=(1,2))
     p = plan_fft(arr, dims)
   
     # create object to detector 

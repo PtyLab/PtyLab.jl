@@ -113,7 +113,7 @@ calc_dxo(dxp) = dxp
     calc_Lo(No, dxo) 
 
 """
-calc_Lo(No, dxo) = No * dxp 
+calc_Lo(No, dxo) = No * dxo 
 
 
 

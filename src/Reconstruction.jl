@@ -79,7 +79,7 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}) where T
     d[:entrancePupilDiameter] = 
         let 
             if isnothing(data.entrancePupilDiameter)
-                calc_Lp(calc_Np(d[:data.Nd]), d[:dxp])
+                calc_Lp(calc_Np(d[:data.Nd]), d[:dxp]) / 3
             else 
                 data.entrancePupilDiameter
             end
@@ -153,7 +153,6 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
 
 
     if recCPM.initialObject === InitialObjectOnes
-        @show recCPM.shape_O
         recCPM.object = ones(Complex{T}, recCPM.shape_O) 
     else
         error("InitialObject = $(recCPM.initialObject) not valid")
@@ -161,7 +160,7 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
 
     if recCPM.initialProbe === InitialProbeCirc
         # recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(recCPM.Nd)), recCPM.dxp) .* ones(T, recCPM.shape_O) 
-        recCPM.probe = circ(recCPM.shape_P, recCPM.xp, recCPM.entrancePupilDiameter) .* ones(Complex{T}, recCPM.shape_P) 
+        recCPM.probe = circ(recCPM.shape_P, recCPM.xp, recCPM.entrancePupilDiameter / 2) .* ones(Complex{T}, recCPM.shape_P) 
     else
         error("InitialProbe = $(recCPM.initialProbe) not valid")
     end    

@@ -58,7 +58,7 @@ Fill the `ExperimentalDataCPM` struct with data from a `*.hdf5` file.
 function ExperimentalDataCPM(fileName::String)
     # open h5 file
     fid = HDF5.h5open(fileName)
-   
+    @info "Reading $fid was successful"
     # function to extract number from a vector wrap
     r_number(x) = haskey(fid, x) ? read(fid, x)[begin] : nothing
     # read arrays, take full

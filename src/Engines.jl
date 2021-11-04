@@ -13,7 +13,8 @@ end
 
 function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     # create an efficient propagator function
-    object2detector, detector2object = params.propagatorType(rec.object, rec, params)
+    esw_temp = rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe
+    object2detector, detector2object = params.propagatorType(esw_temp, rec, params)
        
     
     @warn "gimmel is currently estimated as `100 * eps($T)`"
@@ -22,13 +23,18 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
         ESW = object2detector(esw)
         Iestimated = let
             if params.intensityConstraint === IntensityConstraintStandard
-                sum(abs2, ESW, dims=(1, 2))
+                # sum over the last three channels.
+                sum(abs2, ESW, dims=(4, 5, 6))
+            else
+                error("Unknown intensityConstraint")
             end
         end
 
         frac = let 
             if params.intensityConstraint === IntensityConstraintStandard 
                 frac = sqrt.(Imeasured ./ (Iestimated .+ gimmel))
+            else
+                error("Unknown intensityConstraint")
             end
         end
 
@@ -43,42 +49,13 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     return f 
 end
 
-    # def objectPatchUpdate(self, objectPatch: np.ndarray, DELTA: np.ndarray):
-    #     """
-    #     Todo add docstring
-    #     :param objectPatch:
-    #     :param DELTA:
-    #     :return:
-    #     """
-    #     # find out which array module to use, numpy or cupy (or other...)
-    #     xp = getArrayModule(objectPatch)
 
-    #     frac = self.reconstruction.probe.conj() / xp.max(xp.sum(xp.abs(self.reconstruction.probe) ** 2, axis=(0, 1, 2, 3)))
-    #     return objectPatch + self.betaObject * xp.sum(frac * DELTA, axis=(0,2,3), keepdims=True)
+function probeObjectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
+    fracObject = conj.(probe) ./ maximum(sum(abs2.(probe), dims=3:ndims(probe)))
+    fracProbe = conj.(objectPatch) ./ maximum(sum(abs2.(objectPatch), dims=3:ndims(objectPatch)))
 
-       
-    # def probeUpdate(self, objectPatch: np.ndarray, DELTA: np.ndarray):
-    #     """
-    #     Todo add docstring
-    #     :param objectPatch:
-    #     :param DELTA:
-    #     :return:
-    #     """
-    #     # find out which array module to use, numpy or cupy (or other...)
-    #     xp = getArrayModule(objectPatch)
-    #     frac = objectPatch.conj() / xp.max(xp.sum(xp.abs(objectPatch) ** 2, axis=(0,1,2,3)))
-    #     r = self.reconstruction.probe + self.betaProbe * xp.sum(frac * DELTA, axis=(0, 1, 3), keepdims=True)
-    #     return r
-
-
-
-
-function probeObjectPatchUpdate!(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracProbe = conj.(probe) ./ maximum(sum(abs2.(probe), dims=3:ndims(probe)))
-    fracObject = conj.(objectPatch) ./ maximum(sum(abs2.(objectPatch), dims=3:ndims(objectPatch)))
-
-    newProbe .= probe .+ engine.betaProbe .* sum(frac .* DELTA, dims=(2, 3, 5))
-    newObject .= objectPatch .+ engine.betaObject .* sum(frac .* DELTA, dims=(2,4,5))
+    newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
+    newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
 
     return newProbe, newObject
 end
@@ -90,28 +67,35 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
 
     # create a 
     intensityProjection = IntensityProjection(rec, params)
-    for loop in 1:engine.numIterations
+    object = rec.object
+    probe = rec.probe
+    ptychogram = rec.ptychogram
+    @showprogress for loop in 1:engine.numIterations
         Np = rec.Np
-        @warn "Order is not randomized yet"
-        for positionIndex = 1:rec.numFrames
-            @show positions
-            row, col = positions[positionIndex] 
+        for positionIndex in randperm(size(positions, 2))
+            # row, col does not work!
+            col, row= positions[:, positionIndex] 
                 
-            sy = row:(row + Np)
-            sx = col:(col+ Np)
-            # using EllipsisNotation
+            sy = row:(row + Np - 1)
+            sx = col:(col + Np - 1)
+            # using EllipsisNotation (..)
             # this line already copies the data!
-            objectPatch = rec.object[sy, sx, ..]
+            objectPatch = object[sy, sx, ..]
 
             # exit surface wave
-            esw = objectPatch .* rec.probe
+            esw = objectPatch .* probe
 
-            eswUpdate = intensityProjection(esw, rec.ptychogram[positionIndex])
+            eswUpdate = intensityProjection(esw, view(ptychogram, :, :, positionIndex))
                 
              # difference term
-            DELTA .-= esw
+            DELTA = eswUpdate .- esw
 
-            probeObjectPatchUpdate!(engine, objectPatch, rec.probe, DELTA) 
+            # update newProbe und newObjectPatch
+            newProbe, newObjectPatch = probeObjectPatchUpdate(engine, objectPatch, probe, DELTA) 
+            probe .= newProbe
+            object[sy, sx, ..] .= newObjectPatch 
         end 
+        # break
     end
+    return rec.probe, rec.object
 end

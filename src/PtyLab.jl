@@ -5,6 +5,7 @@ using Parameters
 
  # we need fft and variants
 using FFTW, FourierTools
+FFTW.set_num_threads(4)
  # for displaying
 using ColorTypes
  # data loading
@@ -14,6 +15,12 @@ using EllipsisNotation
 
  # stuff like rr2,... 
 using IndexFunArrays
+
+ # for randperm
+using Random
+
+ # progress bar for loops
+using ProgressMeter
 
  # @kwdef macro
 import Base.@kwdef
