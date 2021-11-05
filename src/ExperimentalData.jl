@@ -1,13 +1,18 @@
 export ExperimentalDataCPM
 
+"""
+    ExperimentalData
 
+Abstract type for [`ExperimentalDataCPM`](@ref ExperimentalDataCPMa) 
+and [`ExperimentalDataCPM`](@ref ExperimentalDataFPM)
+"""
 abstract type ExperimentalData{T} end
 
 
 """
     ExperimentalDataCPM{T}
 
-`mutable struct` stores all parameters for a CPM dataset
+`mutable struct` stores all experimental parameters for a CPM dataset
 """
 @kwdef mutable struct ExperimentalDataCPM{T} <: ExperimentalData{T}
     ptychogram::Union{Nothing, Array{T, N}} where N
@@ -36,17 +41,6 @@ end
 
 """
 @kwdef mutable struct ExperimentalDataFPM{T} <: ExperimentalData{T}
-    ptychogram::Union{Nothing, Array{T, N}} where N
-    wavelength::T
-    encoder::Union{Nothing, Array{T, 2}}
-    # detector sampling
-    dxd::T
-    # distance to detector 
-    zo::T
-    zled::T
-    # optional parameters
-    magnfication::Union{Nothing, T}
-    dxp::Union{Nothing, T}
 end
 
 
@@ -102,8 +96,4 @@ end
 
 function Base.getproperty(expData::ExperimentalData, sym::Symbol)
     return getfield(expData, sym)
-    # if hasproperty(expData, sym)
-    #     return getfield(expData, sym)
-    # end
 end
-

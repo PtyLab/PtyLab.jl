@@ -22,6 +22,10 @@ using Random
  # progress bar for loops
 using ProgressMeter
 
+ # CUDA acceleration
+using CUDA
+
+
  # @kwdef macro
 import Base.@kwdef
 
@@ -37,12 +41,15 @@ abstract type FPM <: ModePtychograpy end
 include("utils_grid.jl")
 
 
+ # basic parts
 include("ExperimentalData.jl")
 include("Reconstruction.jl")
 include("Params.jl")
 include("Operators.jl")
 include("Engines.jl")
 
+
+ # some utilities
 include("utils.jl")
 include("utils_calc.jl")
 include("utils_display.jl")

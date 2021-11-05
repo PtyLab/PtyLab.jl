@@ -6,10 +6,12 @@ abstract type IntensityConstraintStandard <: IntensityConstraint end
 
 
 """
-Some settings are shared in between different optimizers, such as the type of propagatorType that you intend to use,
-if you want to use probe orthogonalization, etc. These are stored in the reconstruction_parameters object.
+@with_kw mutable struct Params
 
-This ensures that code like this will work as expected:
+Those are some settings which are shared in between different optimizers, such as the type of propagatorType that you intend to use.
+
+ # TODO
+
 """
 @with_kw mutable struct Params
     # Default settings for switches, settings that involve how things are computed

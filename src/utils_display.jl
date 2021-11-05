@@ -29,7 +29,6 @@ function gray_show(arr; set_one=true, set_zero=false)
 end
 
 
-
 """
     show_grid(grr::PtyLab.GridRegularRand[, only_points=false])
 

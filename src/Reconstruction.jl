@@ -1,6 +1,5 @@
 export ReconstructionCPM
 
-
  # maybe move to a different file
 export InitialObject, InitialObjectOnes
 export InitialProbe, InitialProbeCirc
@@ -145,19 +144,24 @@ function Base.getproperty(recCPM::ReconstructionCPM, sym::Symbol)
 end
 
 
+"""
+    initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
 
-
+Initializes `recCPM.object` and `recCPM.probe` and stores it directly in `recCPM`.
+"""
 function initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
     Np = calc_Np(recCPM.Nd)
     xp = calc_xp(recCPM.Np, recCPM.dxp) 
 
 
+    # handle object
     if recCPM.initialObject === InitialObjectOnes
         recCPM.object = ones(Complex{T}, recCPM.shape_O) 
     else
         error("InitialObject = $(recCPM.initialObject) not valid")
     end
 
+    # handle probe
     if recCPM.initialProbe === InitialProbeCirc
         # recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(recCPM.Nd)), recCPM.dxp) .* ones(T, recCPM.shape_O) 
         recCPM.probe = circ(recCPM.shape_P, recCPM.xp, recCPM.entrancePupilDiameter / 2) .* ones(Complex{T}, recCPM.shape_P) 
@@ -167,7 +171,3 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
 
     return recCPM 
 end
-
-
-
-

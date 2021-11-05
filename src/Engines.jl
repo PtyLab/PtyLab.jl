@@ -3,14 +3,29 @@ export ePIE
 
 abstract type Engines end
 
+"""
+    @with_kw mutable struct ePIE{T} <: Engines
 
+`ePIE` is a struct to store important parameters for the `ePIE::Engine` 
+"""
 @with_kw mutable struct ePIE{T} <: Engines
     betaProbe::T=0.25f0
     betaObject::T=0.25f0
     numIterations::Int=50
 end
 
+"""
+    IntensityProjection(rec::ReconstructionCPM{T}, params::Params)
 
+Returns a function which does the `intensityProjection`.
+
+ # Examples
+```julia
+julia> intensityProjection = IntensityProjection(rec, params)
+
+julia> eswUpdate = intensityProjection(esw, Imeasured)
+```
+"""
 function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     # create an efficient propagator function
     esw_temp = rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe
@@ -49,29 +64,55 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     return f 
 end
 
+"""
+    probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
 
-function probeObjectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracObject = conj.(probe) ./ maximum(sum(abs2.(probe), dims=3:ndims(probe)))
+Returns the `newProbe`.
+"""
+function probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
     fracProbe = conj.(objectPatch) ./ maximum(sum(abs2.(objectPatch), dims=3:ndims(objectPatch)))
 
     newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
-    newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
 
-    return newProbe, newObject
+    return newProbe
 end
 
+"""
+    probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
+
+Returns the `newobjectPatch`.
+"""
+function objectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
+    fracObject = conj.(probe) ./ maximum(sum(abs2.(probe), dims=3:ndims(probe)))
+
+    newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
+
+    return newObject
+end
+
+"""
+    reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
+
+Reconstruct a CPM dataset.
+"""
 function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
     # calculate the positions
     positions = rec.positions
 
 
-    # create a 
+    # create intensityProjection function 
     intensityProjection = IntensityProjection(rec, params)
+
+    # alias
     object = rec.object
     probe = rec.probe
     ptychogram = rec.ptychogram
+    Np = rec.Np
+
+
+    # a lot of memory optimizations can be done!
+    # MOAR buffers
     @showprogress for loop in 1:engine.numIterations
-        Np = rec.Np
         for positionIndex in randperm(size(positions, 2))
             # row, col does not work!
             col, row= positions[:, positionIndex] 
@@ -91,11 +132,11 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
             DELTA = eswUpdate .- esw
 
             # update newProbe und newObjectPatch
-            newProbe, newObjectPatch = probeObjectPatchUpdate(engine, objectPatch, probe, DELTA) 
+            newProbe = probeUpdate(engine, objectPatch, probe, DELTA) 
+            newObjectPatch = objectPatchUpdate(engine, objectPatch, probe, DELTA) 
             probe .= newProbe
             object[sy, sx, ..] .= newObjectPatch 
         end 
-        # break
     end
     return rec.probe, rec.object
 end
