@@ -19,6 +19,9 @@ using IndexFunArrays
  # for randperm
 using Random
 
+ #
+using Tullio
+
  # progress bar for loops
 using ProgressMeter
 

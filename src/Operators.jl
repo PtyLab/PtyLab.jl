@@ -13,7 +13,7 @@ Currently uses `plan_fft!` for in-place ffts. `FFTW_flags` is only passed to `pl
 julia> o2d, d2o = Fraunhofer(arr, rec, params)
 ```
 """
-function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFTW_flags=FFTW.MEASURE) where T
+function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFTW_flags=FFTW.PATIENT) where T
 
     # planning can overwritte array sometimes!
     # only FFTW allows different flags
@@ -28,8 +28,8 @@ function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFT
 
 
     # create object to detector 
-    o2d = let p=p
-        o2d(x) = p * x
+    o2d! = let p=p
+        o2d!(x) = p * x
     end
     # same with shift
     o2ds = let p=p
@@ -37,12 +37,12 @@ function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFT
     end
 
     # create detector to object without shifts 
-    d2o = let p=p
-        d2o(x) = inv(p) * x 
+    d2o! = let p_inv=inv(p)
+        d2o!(x) = p_inv * x
     end
 
-    d2os = let p=p
-        d2os(x) = fftshift(inv(p) * ifftshift(x, dims), dims)
+    d2os = let p_inv=inv(p)
+        d2os(x) = fftshift(p_inv * ifftshift(x, dims), dims)
     end
 
 
@@ -50,6 +50,6 @@ function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFT
     if params.fftshiftFlag
         return o2ds, d2os
     else
-        return o2d, d2o
+        return o2d!, d2o!
     end
 end

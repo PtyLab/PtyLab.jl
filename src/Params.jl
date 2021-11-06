@@ -2,7 +2,9 @@ export Params
 
 
 abstract type IntensityConstraint end
-abstract type IntensityConstraintStandard <: IntensityConstraint end
+struct IntensityConstraintStandard <:IntensityConstraint
+
+end
 
 
 """
@@ -20,7 +22,7 @@ Those are some settings which are shared in between different optimizers, such a
     FourierMaskSwitch::Bool = false
     CPSCswitch::Bool = false
     CPSCupsamplingFactor::Bool = false
-    intensityConstraint::Type{<:IntensityConstraint} = IntensityConstraintStandard 
+    intensityConstraint::IntensityConstraint = IntensityConstraintStandard() 
     propagatorType::Function = Fraunhofer
     momentumAcceleration::Bool = false
     adaptiveMomentumAcceleration::Bool = false

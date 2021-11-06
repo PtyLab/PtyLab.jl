@@ -34,44 +34,51 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     
     @warn "gimmel is currently estimated as `100 * eps($T)`"
     gimmel = 100 * eps(T)
-    function f(esw, Imeasured)
-        ESW = object2detector(esw)
-        Iestimated = let
-            if params.intensityConstraint === IntensityConstraintStandard
-                # sum over the last three channels.
-                sum(abs2, ESW, dims=(4, 5, 6))
-            else
-                error("Unknown intensityConstraint")
+    f! = let intensityConstraint = params.intensityConstraint
+        function f(esw, Imeasured)
+            ESW = object2detector(esw)
+            Iestimated = let
+                if typeof(intensityConstraint) == IntensityConstraintStandard
+                    # sum over the last three channels.
+                    # @tullio Iestimated[i, j] := abs2(ESW[i,j,k,s1,s2,s3]) 
+                    # that is currently faster than @tullio
+                    view(sum(abs2, ESW, dims=(3, 4, 5, 6)), :, :, 1,1,1,1)
+                else
+                    error("Unknown intensityConstraint")
+                end
             end
-        end
 
-        frac = let 
-            if params.intensityConstraint === IntensityConstraintStandard 
-                frac = sqrt.(Imeasured ./ (Iestimated .+ gimmel))
-            else
-                error("Unknown intensityConstraint")
+            frac = let 
+                if typeof(intensityConstraint) == IntensityConstraintStandard 
+                    @tullio frac[a1,a2] := sqrt(Imeasured[a1,a2] / (Iestimated[a1,a2] + gimmel))
+                    # frac = sqrt.(Imeasured ./ (Iestimated .+ gimmel))
+                else
+                    error("Unknown intensityConstraint")
+                end
             end
+
+            # update ESW
+            ESW .*= frac
+
+            # back to detector, memory free due to plan_fft!
+            eswUpdate = detector2object(ESW)
+            return eswUpdate 
         end
-
-        # update ESW
-        ESW .*= frac
-
-        # back to detector
-        eswUpdate = detector2object(ESW)
-        return eswUpdate 
     end
 
-    return f 
+    return f! 
 end
 
 """
     probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
 
 Returns the `newProbe`.
+
+TODO memory improvements possible
+
 """
 function probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
     fracProbe = conj.(objectPatch) ./ maximum(sum(abs2.(objectPatch), dims=3:ndims(objectPatch)))
-
     newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
 
     return newProbe
@@ -81,10 +88,10 @@ end
     probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
 
 Returns the `newobjectPatch`.
+TODO memory improvements possible
 """
 function objectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
     fracObject = conj.(probe) ./ maximum(sum(abs2.(probe), dims=3:ndims(probe)))
-
     newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
 
     return newObject
@@ -96,47 +103,60 @@ end
 Reconstruct a CPM dataset.
 """
 function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
-    # calculate the positions
+    # calculate the positions since rec.positions is in fact a function!
     positions = rec.positions
 
-
     # create intensityProjection function 
-    intensityProjection = IntensityProjection(rec, params)
+    intensityProjection! = IntensityProjection(rec, params)
 
-    # alias
+    # get two function which maybe shift depending on the flag             \
+    maybe_fftshift, maybe_ifftshift = get_maybe_fftshifts(! params.fftshiftFlag) 
+
+    # alias and shift maybe
     object = rec.object
-    probe = rec.probe
-    ptychogram = rec.ptychogram
+    probe = maybe_ifftshift(rec.probe)
+    ptychogram = maybe_ifftshift(rec.ptychogram)
+
     Np = rec.Np
 
-
-    # a lot of memory optimizations can be done!
-    # MOAR buffers
+    # copy them!
+    # those are buffers
+    oldProbe = copy(probe)
+    oldObjectPatch = object[1:Np, 1:Np, ..]
+    esw = object[1:Np, 1:Np, ..] .* probe
+    
     @showprogress for loop in 1:engine.numIterations
         for positionIndex in randperm(size(positions, 2))
             # row, col does not work!
-            col, row= positions[:, positionIndex] 
+            col, row = positions[:, positionIndex] 
                 
             sy = row:(row + Np - 1)
             sx = col:(col + Np - 1)
-            # using EllipsisNotation (..)
-            # this line already copies the data!
-            objectPatch = object[sy, sx, ..]
+            # no copy necessary -> because esw immediately calculated
+            objectPatch = maybe_ifftshift(view(object, sy, sx, ..))
 
-            # exit surface wave
+            # save old state since we need that later for probeUpdate and objectPatchUpdate
+            oldObjectPatch .= objectPatch
+            oldProbe .= probe
+
+            # exit surface wave,
+            # tullio seems to be slower on such simple operations
+            # @tullio esw[i1,i2,i3,i4,i5,i6] = objectPatch[i1,i2,i3,i4,1,i6] .* probe[i1,i2,i3,1,i5,i6]
             esw = objectPatch .* probe
 
-            eswUpdate = intensityProjection(esw, view(ptychogram, :, :, positionIndex))
-                
+            # already store esw in DELTA, since intensityProjection is going to change esw
+            DELTA = -1 .* esw
+            eswUpdate = intensityProjection!(esw, view(ptychogram, :, :, positionIndex))
+            
              # difference term
-            DELTA = eswUpdate .- esw
+            DELTA .+= eswUpdate
 
             # update newProbe und newObjectPatch
-            newProbe = probeUpdate(engine, objectPatch, probe, DELTA) 
-            newObjectPatch = objectPatchUpdate(engine, objectPatch, probe, DELTA) 
+            newProbe = probeUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
+            newObjectPatch = objectPatchUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
             probe .= newProbe
-            object[sy, sx, ..] .= newObjectPatch 
+            object[sy, sx, ..] .= maybe_fftshift(newObjectPatch)
         end 
     end
-    return rec.probe, rec.object
+    return probe, object
 end
