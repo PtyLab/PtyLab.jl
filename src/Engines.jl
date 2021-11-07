@@ -114,7 +114,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
 
     # alias and shift maybe
     object = rec.object
-    probe = maybe_ifftshift(rec.probe)
+    probe = rec.probe
     ptychogram = maybe_ifftshift(rec.ptychogram)
 
     Np = rec.Np
@@ -133,7 +133,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
             sy = row:(row + Np - 1)
             sx = col:(col + Np - 1)
             # no copy necessary -> because esw immediately calculated
-            objectPatch = maybe_ifftshift(view(object, sy, sx, ..))
+            objectPatch = view(object, sy, sx, ..)
 
             # save old state since we need that later for probeUpdate and objectPatchUpdate
             oldObjectPatch .= objectPatch
@@ -155,7 +155,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
             newProbe = probeUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
             newObjectPatch = objectPatchUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
             probe .= newProbe
-            object[sy, sx, ..] .= maybe_fftshift(newObjectPatch)
+            object[sy, sx, ..] .= newObjectPatch
         end 
     end
     return probe, object

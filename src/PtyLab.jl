@@ -19,6 +19,8 @@ using IndexFunArrays
  # for randperm
 using Random
 
+using LoopVectorization
+
  #
 using Tullio
 
