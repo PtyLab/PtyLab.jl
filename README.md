@@ -20,5 +20,5 @@ Julia Implementation of PtyLab
 [CI-img]: https://github.com/roflmaostc/PtyLab.jl/actions/workflows/ci.yml/badge.svg
 [CI-url]: https://github.com/roflmaostc/PtyLab.jl/actions/workflows/ci.yml
 
-[Codecov-img]: https://codecov.io/gh/roflmaostc/PtyLab.jl/branch/main/graph/badge.svg?token=OQ6BQCUFQB)
-[Codecov-url]: https://codecov.io/gh/roflmaostc/PtyLab.jl
+[codecov-img]: https://codecov.io/gh/roflmaostc/PtyLab.jl/branch/main/graph/badge.svg?token=OQ6BQCUFQB
+[codecov-url]: https://codecov.io/gh/roflmaostc/PtyLab.jl
