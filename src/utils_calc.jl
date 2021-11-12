@@ -61,7 +61,7 @@ calc_energyAtPos(ptychogram) = sum(abs, ptychogram, dims=(1,2))[1, 1, ..]
 
 Calculate max probe power at each position.
 """
-calc_maxProbePower(ptychogram) = sqrt(maximum(sum(ptychogram, dims=(1,2))))
+calc_maxProbePower(ptychogram) = maximum(sum(abs, ptychogram, dims=(1,2)))
 
 
 """
@@ -102,10 +102,10 @@ calc_NAd(Ld, zo) = Ld / (2 * zo)
 
 
 """
-    calc_DoF(lambda, NAd) 
+    calc_DoF(wavelength, NAd) 
 
 """
-calc_DoF(lambda, NAd) = wavelength / NAd^2
+calc_DoF(wavelength, NAd) = wavelength / NAd^2
 
 """
     calc_dxo(dxp) 
