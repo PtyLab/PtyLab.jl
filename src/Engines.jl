@@ -34,7 +34,9 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     
     @warn "gimmel is currently estimated as `100 * eps($T)`"
     gimmel = 100 * eps(T)
-    f! = let intensityConstraint = params.intensityConstraint
+    f! = let    intensityConstraint = params.intensityConstraint
+                object2detector = object2detector
+                detector2object = detector2object
         function f(esw, Imeasured)
             ESW = object2detector(esw)
             Iestimated = let
@@ -42,7 +44,7 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
                     # sum over the last three channels.
                     # @tullio Iestimated[i, j] := abs2(ESW[i,j,k,s1,s2,s3]) 
                     # that is currently faster than @tullio
-                    view(sum(abs2, ESW, dims=(3, 4, 5, 6)), :, :, 1,1,1,1)
+                    @tturbo view(sum(abs2, ESW, dims=(3, 4, 5, 6)), :, :, 1,1,1,1)
                 else
                     error("Unknown intensityConstraint")
                 end
@@ -110,7 +112,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
     intensityProjection! = IntensityProjection(rec, params)
 
     # get two function which maybe shift depending on the flag             \
-    maybe_fftshift, maybe_ifftshift = get_maybe_fftshifts(! params.fftshiftFlag) 
+    maybe_fftshift, maybe_ifftshift = getMaybeFftshifts(! params.fftshiftFlag) 
 
     # alias and shift maybe
     object = rec.object

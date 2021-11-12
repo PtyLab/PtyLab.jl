@@ -12,8 +12,10 @@ end
 
 Those are some settings which are shared in between different optimizers, such as the type of propagatorType that you intend to use.
 
- # TODO
+ # Fields
 
+* `fftshiftFlag`: TODO
+* `propagatorType`: Default is `Fraunhofer`. See other Operator options. 
 """
 @with_kw mutable struct Params
     # Default settings for switches, settings that involve how things are computed
