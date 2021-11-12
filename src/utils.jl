@@ -1,3 +1,22 @@
+"""
+    circ(shape, xi, radius)
+
+Returns an `Array{Bool}`.
+A entry is 1 if that positions lies within the `radius`.
+The entry are assumed to be in the interval [-xi, ..., xi].
+
+
+ ## Examples
+```julia-repl
+julia> PtyLab.circ((1,5), 2, 1.01)
+1×5 BitMatrix:
+ 0  1  1  1  0
+
+julia> PtyLab.circ((1,5), 2, 0.5)
+1×5 BitMatrix:
+ 0  0  1  0  0
+```
+"""
 function circ(shape, xi, radius)
     rr2 = IndexFunArrays.rr2(shape, scale=ScaMid, offset=CtrMid) .* xi[end]^2
     return rr2 .< radius^2
@@ -37,13 +56,13 @@ end
 
 
 """
-    get_maybe_fftshifts(b)
+    getMaybeFftshifts(b)
 
-If `b` is true, the `get_maybe_fftshifts` returns two functions which shift an array.
+If `b` is true, the `getMaybeFftshifts` returns two functions which shift an array.
 
  ## Example
 ```julia-repl
-julia> maybe_fftshift, maybe_ifftshift = PtyLab.get_maybe_fftshifts(true)
+julia> maybe_fftshift, maybe_ifftshift = PtyLab.getMaybeFftshifts(true)
 (PtyLab.var"#43#45"(), PtyLab.var"#44#46"())
 
 julia> maybe_fftshift([1,2,3,4])
@@ -60,7 +79,7 @@ julia> maybe_ifftshift([1,2,3,4])
  1
  2
 
-julia>  maybe_fftshift, maybe_ifftshift = PtyLab.get_maybe_fftshifts(false)
+julia>  maybe_fftshift, maybe_ifftshift = PtyLab.getMaybeFftshifts(false)
 (identity, identity)
 
 julia> maybe_fftshift([1,2,3,4])
@@ -78,7 +97,7 @@ julia> maybe_ifftshift([1,2,3,4])
  4
 ```
 """
-function get_maybe_fftshifts(b)
+function getMaybeFftshifts(b)
 
     maybe_fftshift = let
         if b 
