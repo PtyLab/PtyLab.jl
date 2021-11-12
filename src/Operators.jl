@@ -1,7 +1,7 @@
 export Fraunhofer
 
 """
-    Fraunhofer(arr, rec::Reconstruction, params::Parameters; shift=false, dims=(1,2), FFTW_flags=FFTW.MEASURE)
+    Fraunhofer(arr, params::Parameters; shift=false, dims=(1,2), FFTW_flags=FFTW.MEASURE)
 
 Returns two functions `object2detector, detector2object` which can propagate `asw` with Fraunhofer assumption
 efficiently between object and detector back and forth
@@ -13,7 +13,7 @@ Currently uses `plan_fft!` for in-place ffts. `FFTW_flags` is only passed to `pl
 julia> o2d, d2o = Fraunhofer(arr, rec, params)
 ```
 """
-function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFTW_flags=FFTW.PATIENT) where T
+function Fraunhofer(arr::T, params::Params; dims=(1,2), FFTW_flags=FFTW.PATIENT) where T
 
     # planning can overwritte array sometimes!
     # only FFTW allows different flags
@@ -33,7 +33,7 @@ function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFT
     end
     # same with shift
     o2ds = let p=p
-        o2ds(x) = fftshift(p * ifftshift(x, dims), dims)
+        o2ds(x) = fftshift(p * x, dims)
     end
 
     # create detector to object without shifts 
@@ -42,7 +42,7 @@ function Fraunhofer(arr::T, rec::Reconstruction, params::Params; dims=(1,2), FFT
     end
 
     d2os = let p_inv=inv(p)
-        d2os(x) = fftshift(p_inv * ifftshift(x, dims), dims)
+        d2os(x) = p_inv * ifftshift(x, dims)
     end
 
 

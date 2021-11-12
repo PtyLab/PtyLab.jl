@@ -17,14 +17,6 @@ Those are some settings which are shared in between different optimizers, such a
 """
 @with_kw mutable struct Params
     # Default settings for switches, settings that involve how things are computed
-    fftshiftSwitch::Bool = false 
     fftshiftFlag::Bool = false
-    FourierMaskSwitch::Bool = false
-    CPSCswitch::Bool = false
-    CPSCupsamplingFactor::Bool = false
-    intensityConstraint::IntensityConstraint = IntensityConstraintStandard() 
     propagatorType::Function = Fraunhofer
-    momentumAcceleration::Bool = false
-    adaptiveMomentumAcceleration::Bool = false
-    positionOrder::Type{<:PositionOrder} = GridRegularRand
 end
