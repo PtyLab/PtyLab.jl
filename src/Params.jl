@@ -20,5 +20,6 @@ Those are some settings which are shared in between different optimizers, such a
 @with_kw mutable struct Params
     # Default settings for switches, settings that involve how things are computed
     fftshiftFlag::Bool = false
+    intensityConstraint::Type{<:IntensityConstraint} = IntensityConstraintStandard 
     propagatorType::Function = Fraunhofer
 end

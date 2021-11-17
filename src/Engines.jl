@@ -29,7 +29,7 @@ julia> eswUpdate = intensityProjection(esw, Imeasured)
 function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     # create an efficient propagator function
     esw_temp = rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe
-    object2detector, detector2object = params.propagatorType(esw_temp, rec, params)
+    object2detector, detector2object = params.propagatorType(esw_temp, params)
        
     
     @warn "gimmel is currently estimated as `100 * eps($T)`"
@@ -40,18 +40,18 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
         function f(esw, Imeasured)
             ESW = object2detector(esw)
             Iestimated = let
-                if typeof(intensityConstraint) == IntensityConstraintStandard
+                if intensityConstraint === IntensityConstraintStandard
                     # sum over the last three channels.
                     # @tullio Iestimated[i, j] := abs2(ESW[i,j,k,s1,s2,s3]) 
                     # that is currently faster than @tullio
                     @tturbo view(sum(abs2, ESW, dims=(3, 4, 5, 6)), :, :, 1,1,1,1)
                 else
-                    error("Unknown intensityConstraint")
+                    error("Unknown intensityConstraint $intensityConstraint")
                 end
             end
 
             frac = let 
-                if typeof(intensityConstraint) == IntensityConstraintStandard 
+                if intensityConstraint === IntensityConstraintStandard 
                     @tullio frac[a1,a2] := sqrt(Imeasured[a1,a2] / (Iestimated[a1,a2] + gimmel))
                     # frac = sqrt.(Imeasured ./ (Iestimated .+ gimmel))
                 else
