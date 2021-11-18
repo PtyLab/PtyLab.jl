@@ -41,7 +41,7 @@ function grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10)
     js = round.(Ref(Int), range(1, grid_size[2] - tile_size[2], length=M))
    
     # linear overlap for each direction
-    overlap = 1 .- ((grid_size[1] - 1)/(N-1), (grid_size[2] - 1)/(M-1)) ./ tile_size
+    overlap = max(0, 1 - (is[2] - is[1]) / tile_size[1]), max(0, 1 - (js[2] - js[1]) / tile_size[2]) 
     # struct storing all the output information
     grr = GridRegularRand(grid_size, tile_size, Vector{Tile}[], overlap)
 
@@ -58,6 +58,22 @@ function grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10)
     return grr 
 end
 
+"""
+    encoder(posOrder::PositionOrder, dxo)
+
+Converts the `posOrder` to a matrix with shape `(2, N)` where `N = length(posOrder.tiles)`.
+`dxo` is the pixel size of the object. 
+"""
+function encoder(posOrder::PositionOrder, dxo)
+    # out 2xN matrix
+    out = zeros(typeof(dxo), (2, length(posOrder.tiles)))
+    # iterate over tiles
+    for (k, t) in enumerate(posOrder.tiles)
+        # left top corner
+        out[:, k] .= [t.i₁, t.j₁]
+    end
+    return out
+end
 
 """
     random_constrained_wiggle(k, ks, rand_offset)
