@@ -29,7 +29,7 @@ julia> eswUpdate = intensityProjection(esw, Imeasured)
 function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     # create an efficient propagator function
     esw_temp = rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe
-    object2detector, detector2object = params.propagatorType(esw_temp, params)
+    object2detector, detector2object = params.propagatorType(esw_temp)
        
     
     @warn "gimmel is currently estimated as `100 * eps($T)`"
@@ -117,6 +117,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
     # alias and shift maybe
     object = rec.object
     probe = rec.probe
+    # ptychogram = rec.ptychogram
     ptychogram = maybe_ifftshift(rec.ptychogram)
 
     Np = rec.Np
@@ -130,7 +131,8 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
     @showprogress for loop in 1:engine.numIterations
         for positionIndex in randperm(size(positions, 2))
             # row, col does not work!
-            col, row = positions[:, positionIndex] 
+            # col, row = positions[:, positionIndex] 
+            row, col = positions[:, positionIndex] 
                 
             sy = row:(row + Np - 1)
             sx = col:(col + Np - 1)

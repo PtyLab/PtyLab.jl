@@ -1,7 +1,7 @@
 export Fraunhofer
 
 """
-    Fraunhofer(arr, params::Parameters; shift=false, dims=(1,2), FFTW_flags=FFTW.MEASURE)
+    Fraunhofer(arr; fftshift=false, dims=(1,2), FFTW_flags=FFTW.MEASURE)
 
 Returns two functions `object2detector, detector2object` which can propagate `asw` with Fraunhofer assumption
 efficiently between object and detector back and forth
@@ -10,10 +10,10 @@ Currently uses `plan_fft!` for in-place ffts. `FFTW_flags` is only passed to `pl
  ## Examples
  `arr` should be something like the ESW `rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe`.
 ```julia-repl
-julia> o2d, d2o = Fraunhofer(arr, rec, params)
+julia> o2d, d2o = Fraunhofer(arr)
 ```
 """
-function Fraunhofer(arr::T, params::Params; dims=(1,2), FFTW_flags=FFTW.PATIENT) where T
+function Fraunhofer(arr::T; fftshift=false, dims=(1,2), FFTW_flags=FFTW.PATIENT) where T
 
     # planning can overwritte array sometimes!
     # only FFTW allows different flags
@@ -47,7 +47,7 @@ function Fraunhofer(arr::T, params::Params; dims=(1,2), FFTW_flags=FFTW.PATIENT)
 
 
     # return correct functions
-    if params.fftshiftFlag
+    if fftshift 
         return o2ds, d2os
     else
         return o2d!, d2o!

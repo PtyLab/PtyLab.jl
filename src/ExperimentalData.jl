@@ -78,7 +78,8 @@ function ExperimentalDataCPM(fileName::String)
     d[:spectralDensity] = r_number("spectralDensity")
     d[:theta] = r_number("theta")
 
-   
+    # close fid!
+    close(fid)
 
     # derived properties
     d[:Nd] = calc_Nd(d[:ptychogram])
