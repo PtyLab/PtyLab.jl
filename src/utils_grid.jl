@@ -70,7 +70,7 @@ function encoder(posOrder::PositionOrder, dxo)
     # iterate over tiles
     for (k, t) in enumerate(posOrder.tiles)
         # left top corner
-        out[:, k] .= [t.i₁, t.j₁]
+        out[:, k] .= [t.i₁ * dxo, t.j₁ * dxo]
     end
     return out
 end
