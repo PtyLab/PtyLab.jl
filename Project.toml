@@ -25,8 +25,10 @@ FFTW = "1.4.5"
 FourierTools = "0.2.4"
 HDF5 = "0.15.6"
 IndexFunArrays = "0.2.3"
+LoopVectorization = "0.12"
 Parameters = "0.12.3"
 ProgressMeter = "1.7.1"
+Tullio = "0.3"
 
 [extras]
 ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
