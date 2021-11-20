@@ -1,18 +1,37 @@
 export reconstruct
-export ePIE
 
 abstract type Engines end
 
 """
-    @with_kw mutable struct ePIE{T} <: Engines
+    centerOfMassStabilizationOffset(probe)
 
-`ePIE` is a struct to store important parameters for the `ePIE::Engine` 
+Calculate the center of mass in the first 2 dimensions 
+of a N dimensional array `probe`.
+Return a tuple indicating the center.
 """
-@with_kw mutable struct ePIE{T} <: Engines
-    betaProbe::T=0.25f0
-    betaObject::T=0.25f0
-    numIterations::Int=50
+function centerOfMassStabilizationOffset(probe)
+    # calculate center of mass 
+    P2 = sum(abs2, probe, dims=(3,4,5,6));
+    # total weight of the probe
+    denom = sum(P2)
+    # weight each pixel with a distance
+    xc = round(Int, sum((1:size(probe, 2)) .* P2) ./ denom);
+    yc = round(Int, sum((1:size(probe, 1))' .* P2) ./ denom);
+    return (xc, yc) 
 end
+
+
+
+function enforceConstraints!(rec::ReconstructionCPM{T}, params)  where T
+    # enforce center of mass of probe
+    if params.comStabilizationSwitch
+        center = (size(rec.probe, 1), size(rec.probe, 2)) .÷ 2
+        offset = center .- centerOfMassStabilizationOffset(rec.probe)
+        rec.probe .= circshift(rec.probe, offset);
+    end
+end
+
+
 
 """
     IntensityProjection(rec::ReconstructionCPM{T}, params::Params)
@@ -69,98 +88,4 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     end
 
     return f! 
-end
-
-"""
-    probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-
-Returns the `newProbe`.
-
-TODO memory improvements possible
-
-"""
-function probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracProbe = conj.(objectPatch) ./ maximum(sum(abs2.(objectPatch), dims=3:ndims(objectPatch)))
-    newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
-
-    return newProbe
-end
-
-"""
-    probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-
-Returns the `newobjectPatch`.
-TODO memory improvements possible
-"""
-function objectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracObject = conj.(probe) ./ maximum(sum(abs2.(probe), dims=3:ndims(probe)))
-    newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
-
-    return newObject
-end
-
-"""
-    reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
-
-Reconstruct a CPM dataset.
-"""
-function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
-    # calculate the positions since rec.positions is in fact a function!
-    positions = rec.positions
-
-    # create intensityProjection function 
-    intensityProjection! = IntensityProjection(rec, params)
-
-    # get two function which maybe shift depending on the flag             \
-    maybe_fftshift, maybe_ifftshift = getMaybeFftshifts(! params.fftshiftFlag) 
-
-    # alias and shift maybe
-    object = rec.object
-    probe = rec.probe
-    # ptychogram = rec.ptychogram
-    ptychogram = maybe_ifftshift(rec.ptychogram)
-
-    Np = rec.Np
-
-    # copy them!
-    # those are buffers
-    oldProbe = copy(probe)
-    oldObjectPatch = object[1:Np, 1:Np, ..]
-    esw = object[1:Np, 1:Np, ..] .* probe
-    
-    @showprogress for loop in 1:engine.numIterations
-        for positionIndex in randperm(size(positions, 2))
-            # row, col does not work!
-            # col, row = positions[:, positionIndex] 
-            row, col = positions[:, positionIndex] 
-                
-            sy = row:(row + Np - 1)
-            sx = col:(col + Np - 1)
-            # no copy necessary -> because esw immediately calculated
-            objectPatch = view(object, sy, sx, ..)
-
-            # save old state since we need that later for probeUpdate and objectPatchUpdate
-            oldObjectPatch .= objectPatch
-            oldProbe .= probe
-
-            # exit surface wave,
-            # tullio seems to be slower on such simple operations
-            # @tullio esw[i1,i2,i3,i4,i5,i6] = objectPatch[i1,i2,i3,i4,1,i6] .* probe[i1,i2,i3,1,i5,i6]
-            esw = objectPatch .* probe
-
-            # already store esw in DELTA, since intensityProjection is going to change esw
-            DELTA = -1 .* esw
-            eswUpdate = intensityProjection!(esw, view(ptychogram, :, :, positionIndex))
-            
-             # difference term
-            DELTA .+= eswUpdate
-
-            # update newProbe und newObjectPatch
-            newProbe = probeUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
-            newObjectPatch = objectPatchUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
-            probe .= newProbe
-            object[sy, sx, ..] .= newObjectPatch
-        end 
-    end
-    return probe, object
 end

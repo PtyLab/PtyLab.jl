@@ -59,18 +59,19 @@ function grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10)
 end
 
 """
-    encoder(posOrder::PositionOrder, dxo)
+    encoder(posOrder::PositionOrder, dxo; offset=(0,0))
 
 Converts the `posOrder` to a matrix with shape `(2, N)` where `N = length(posOrder.tiles)`.
 `dxo` is the pixel size of the object. 
+`offset` is a tuple which is subtracted from the raw index values of the entries of `posOrder`.
 """
-function encoder(posOrder::PositionOrder, dxo)
+function encoder(posOrder::PositionOrder, dxo; offset=(0, 0))
     # out 2xN matrix
     out = zeros(typeof(dxo), (2, length(posOrder.tiles)))
     # iterate over tiles
     for (k, t) in enumerate(posOrder.tiles)
         # left top corner
-        out[:, k] .= [t.i₁ * dxo, t.j₁ * dxo]
+        out[:, k] .= [(t.i₁ - offset[1]) * dxo, (t.j₁ - offset[2]) * dxo]
     end
     return out
 end

@@ -48,10 +48,19 @@ include("utils_grid.jl")
 
  # basic parts
 include("ExperimentalData.jl")
+
+ # types to store physical quantities for reconstruction
 include("Reconstruction.jl")
+
+ # parameters for reconstruction
 include("Params.jl")
+
+ # operators for field propagation
 include("Operators.jl")
+
+ # different reconstruction engines
 include("Engines.jl")
+include("Engines/ePIE.jl")
 
 
  # some utilities

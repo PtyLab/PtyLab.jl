@@ -14,9 +14,11 @@ Those are some settings which are shared in between different optimizers, such a
 
  # Fields
 
-* `fftshiftFlag`: TODO
-* `propagatorType`: Default is `Fraunhofer`. See other Operator options. 
-* `PermutedDimsArray`: swap the first two dimensions of the ptychogram (transpose the sensor)
+* `fftshiftFlag::Bool = false`: `false` means that the ptychogram is already in the center 
+* `propagatorType = Fraunhofer`: Default is `Fraunhofer`. See other Operator options. 
+* `transposePtychogram::Bool = true`: swap the first two dimensions of the ptychogram (transpose the sensor)
+* `randPositionOrder::Bool = true` randomly draw the encoder positions during reconstruction
+* `comStabilizationSwitch::Bool = true` center of mass -> forces probe to be in the center
 """
 @with_kw mutable struct Params
     # Default settings for switches, settings that involve how things are computed
@@ -24,4 +26,6 @@ Those are some settings which are shared in between different optimizers, such a
     transposePtychogram::Bool = true
     intensityConstraint::Type{<:IntensityConstraint} = IntensityConstraintStandard 
     propagatorType::Function = Fraunhofer
+    randPositionOrder::Bool = true 
+    comStabilizationSwitch::Bool = true
 end
