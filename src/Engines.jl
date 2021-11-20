@@ -25,8 +25,10 @@ end
 function enforceConstraints!(rec::ReconstructionCPM{T}, params)  where T
     # enforce center of mass of probe
     if params.comStabilizationSwitch
-        center = (size(rec.probe, 1), size(rec.probe, 2)) .÷ 2
+        # fourier center (but not important where exactly)
+        center = (size(rec.probe, 1), size(rec.probe, 2)) .÷ 2 .+ 1
         offset = center .- centerOfMassStabilizationOffset(rec.probe)
+        # shift in direction to the center
         rec.probe .= circshift(rec.probe, offset);
     end
 end
