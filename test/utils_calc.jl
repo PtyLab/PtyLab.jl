@@ -11,8 +11,8 @@
     @test PtyLab.calc_Nd(zeros((5,3))) == 5
 
 
-    @test PtyLab.calc_Np(10) == 10
-    @test PtyLab.calc_No(10) == 40
+    # @test PtyLab.calc_Np(10) == 10
+    # @test PtyLab.calc_No(10) == 40
 
 
     @test PtyLab.calc_dxo(1e-5) == 1e-5

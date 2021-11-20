@@ -8,4 +8,10 @@
         @test e.numIterations == 50 
     end
 
+
+    @testset "Constraints" begin
+        @test PtyLab.centerOfMassStabilizationOffset([0 0 0 0; 0 0 0 0; 0 0 1 0;  0 0 0 0]) == (3,3) 
+        @test PtyLab.centerOfMassStabilizationOffset([0 1 0 0; 0 0 0 0; 0 0 0 0;  0 0 0 0]) == (1, 2)
+    end
+
 end
