@@ -6,9 +6,12 @@
 | [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
 
 
+Julia Implementation of PtyLab. PtyLab is a software for Ptychography reconstruction.
 
-
-Julia Implementation of PtyLab
+The following features are implemented:
+* simple Ptychography reconstruction
+* ePIE
+* regular randomized grid
 
 
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-pink.svg
