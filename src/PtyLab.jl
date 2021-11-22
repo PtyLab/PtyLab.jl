@@ -1,5 +1,13 @@
 module PtyLab
 
+ # TODO
+ # package should be registered
+using Pkg
+Pkg.add(url="https://github.com/JuliaMicroscopy/MicroscopyTools.jl")
+using MicroscopyTools
+
+using NDTools
+
  # more fancy struct filling
 using Parameters
 
@@ -29,7 +37,6 @@ using ProgressMeter
 
  # CUDA acceleration
 using CUDA
-
 
  # @kwdef macro
 import Base.@kwdef
