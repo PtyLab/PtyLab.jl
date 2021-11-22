@@ -13,7 +13,7 @@ Currently uses `plan_fft!` for in-place ffts. `FFTW_flags` is only passed to `pl
 julia> o2d, d2o = Fraunhofer(arr)
 ```
 """
-function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.PATIENT) where T
+function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEASURE) where T
 
     # planning can overwritte array sometimes!
     # only FFTW allows different flags
