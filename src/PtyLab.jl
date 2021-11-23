@@ -1,9 +1,5 @@
 module PtyLab
 
- # TODO
- # package should be registered
-using Pkg
-Pkg.add(url="https://github.com/JuliaMicroscopy/MicroscopyTools.jl")
 using MicroscopyTools
 
 using NDTools
