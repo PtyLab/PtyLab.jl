@@ -55,43 +55,63 @@ end
 
 
 """
-    ReconstructionCPM(data::ExperimentalDataCPM)
+    ReconstructionCPM(data::ExperimentalDataCPM; <kwargs>)
 
 Fill the `ReconstructionCPM` struct with `experimentData` and some 
 initial guesses.
+
+
+## kwargs
+* `downsampleFactor`: a downsampleFactor factor for the measured data
 """
-function ReconstructionCPM(data::ExperimentalDataCPM{T}) where T
+function ReconstructionCPM(data::ExperimentalDataCPM{T}; downsampleFactor=1) where T
     d = type2dict(data)
+
+    # adapt detector properties
+    d[:dxd] *= downsampleFactor
+    d[:Nd] = d[:Nd] ÷ downsampleFactor
+    
+    ns = min(size(d[:ptychogram], 1), size(d[:ptychogram], 2))
+    # crop the size along the larger dimensions
+    d[:ptychogram] = NDTools.select_region(d[:ptychogram], new_size=(ns, ns, size(d[:ptychogram], 3)))
+
+    # do binning if downsampleFactor > 1
+    if !isone(downsampleFactor)
+        d[:ptychogram] = MicroscopyTools.bin(d[:ptychogram], (downsampleFactor, downsampleFactor, 1))
+    end
+
     d[:nlambda] = 1
     d[:nosm] = 1
     d[:npsm] = 1
     d[:nslice] = 1
+    
 
-    d[:No] = calc_No(calc_Np(data.Nd))
+    d[:No] = calc_No(calc_Np(d[:Nd]))
     # beam and object purity
     d[:purityProbe] = T(1)
     d[:purityObject] = T(1)
 
-    d[:dxp] = data.wavelength * data.zo / data.Ld
+
+    d[:dxp] = d[:wavelength] * d[:zo] / d[:Ld] 
 
     # if entrancePupilDiameter is not provided in the hdf5 file, set it to be one third of the probe FoV.
     d[:entrancePupilDiameter] = 
         let 
-            if isnothing(data.entrancePupilDiameter)
-                calc_Lp(calc_Np(d[:data.Nd]), d[:dxp]) / 3
+            if isnothing(d[:entrancePupilDiameter])
+                calc_Lp(calc_Np(d[:Nd]), d[:dxp])
             else 
-                data.entrancePupilDiameter
+                d[:entrancePupilDiameter]
             end
         end
             
     # wrap in array if not provided
-    d[:spectralDensity] = isnothing(data.spectralDensity) ? [data.wavelength] : data.spectralDensity
+    d[:spectralDensity] = isnothing(d[:spectralDensity]) ? [d[:wavelength]] : d[:spectralDensity]
 
     d[:initialObject] = InitialObjectOnes
     d[:initialProbe] = InitialProbeCirc
 
     d[:shape_O] = (d[:No], d[:No], d[:nlambda], d[:nosm], 1, d[:nslice])
-    d[:shape_P] = (calc_Np(data.Nd), calc_Np(data.Nd), d[:nlambda], 1, d[:npsm], d[:nslice])
+    d[:shape_P] = (calc_Np(d[:Nd]), calc_Np(d[:Nd]), d[:nlambda], 1, d[:npsm], d[:nslice])
 
 
     # initialize as nothing
