@@ -13,7 +13,7 @@ abstract type InitialProbeCirc <: InitialProbe end
 
 abstract type Reconstruction end
 
-@kwdef mutable struct ReconstructionCPM{T} <: Reconstruction where T
+@kwdef mutable struct ReconstructionCPM{T, A <: AbstractArray{Complex{T}, 6}} <: Reconstruction where T
     # copied from data
     ptychogram::Union{Nothing, Array{T, N}} where N
     numFrames::Int
@@ -49,8 +49,8 @@ abstract type Reconstruction end
     initialObject::Type{<:InitialObject}
     initialProbe::Type{<:InitialProbe}
     # reconstructions
-    object::Union{Nothing, Array{Complex{T}, 6}}
-    probe::Union{Nothing, Array{Complex{T}, 6}}
+    object::Union{Nothing, A}
+    probe::Union{Nothing, A}
 end
 
 
@@ -64,7 +64,7 @@ initial guesses.
 ## kwargs
 * `downsampleFactor`: a downsampleFactor factor for the measured data
 """
-function ReconstructionCPM(data::ExperimentalDataCPM{T}; downsampleFactor=1) where T
+function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampleFactor=1) where T
     d = type2dict(data)
 
     # adapt detector properties
@@ -117,7 +117,13 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; downsampleFactor=1) whe
     # initialize as nothing
     d[:object] = nothing
     d[:probe] = nothing
-    return ReconstructionCPM(; d...)
+
+
+    # do cuda yes or no
+    if cuda
+    	return ReconstructionCPM{T, CuArray{Complex{T}, 6}}(; d...)
+    end
+    return ReconstructionCPM{T, Array{Complex{T}, 6}}(; d...)
 end
 
 """
@@ -165,18 +171,19 @@ end
 
 
 """
-    initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
+    initializeObjectProbe!(recCPM::ReconstructionCPM{T, A}) where {T, A}
 
 Initializes `recCPM.object` and `recCPM.probe` and stores it directly in `recCPM`.
 """
-function initializeObjectProbe!(recCPM::ReconstructionCPM{T}) where {T}
+function initializeObjectProbe!(recCPM::ReconstructionCPM{T, A}) where {T, A}
     Np = calc_Np(recCPM.Nd)
     xp = calc_xp(recCPM.Np, recCPM.dxp) 
 
 
     # handle object
     if recCPM.initialObject === InitialObjectOnes
-        recCPM.object = ones(Complex{T}, recCPM.shape_O) 
+        recCPM.object = A(undef, recCPM.shape_O)
+	fill!(recCPM.object, one(Complex{T}))
     else
         error("InitialObject = $(recCPM.initialObject) not valid")
     end
