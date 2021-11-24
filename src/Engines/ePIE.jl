@@ -20,11 +20,21 @@ Returns the `newProbe`.
 TODO memory improvements possible
 
 """
-function probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracProbe = conj.(objectPatch) ./ maximum(sum(abs2, objectPatch, dims=3:ndims(objectPatch)))
-    newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
+function probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA,
+		     fracProbe=nothing, newProbe=nothing) where T
+    # TODO: make more elegant!
+    if isnothing(fracProbe)
+    	fracProbe = conj.(objectPatch) ./ maximum(sum(abs2, objectPatch, dims=3:ndims(objectPatch)))
+    else
+    	fracProbe .= conj.(objectPatch) ./ maximum(sum(abs2, objectPatch, dims=3:ndims(objectPatch)))
+    end
 
-    return newProbe
+    if isnothing(newProbe)
+    	newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
+    else
+    	newProbe .= probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
+    end
+    return newProbe, fracProbe
 end
 
 """
@@ -33,11 +43,20 @@ end
 Returns the `newobjectPatch`.
 TODO memory improvements possible
 """
-function objectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracObject = conj.(probe) ./ maximum(sum(abs2, probe, dims=3:ndims(probe)))
-    newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
+function objectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA,
+			   fracObject=nothing, newObject=nothing) where T
+    if isnothing(fracObject)
+    	fracObject = conj.(probe) ./ maximum(sum(abs2, probe, dims=3:ndims(probe)))
+    else
+    	fracObject .= conj.(probe) ./ maximum(sum(abs2, probe, dims=3:ndims(probe)))
+    end
 
-    return newObject
+    if isnothing(newObject)
+    	newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
+    else
+    	newObject .= objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
+    end
+    return newObject, fracObject
 end
 
 """
@@ -71,8 +90,11 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
     # those are buffers
     oldProbe = copy(probe)
     oldObjectPatch = object[1:Np, 1:Np, ..]
+    # just a buffer with correct shape
     esw = object[1:Np, 1:Np, ..] .* probe
-    
+   
+    fracProbe, newProbe = nothing, nothing
+    fracObject, newObjectPatch = nothing, nothing
 
     # loop for iterations
     @showprogress for loop in 1:engine.numIterations
@@ -95,8 +117,8 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
 
             # exit surface wave,
             # tullio seems to be slower on such simple operations
-            @tullio esw[i1,i2,i3,i4,i5,i6] = objectPatch[i1,i2,i3,i4,1,i6] .* probe[i1,i2,i3,1,i5,i6]
-            #esw = objectPatch .* probe
+            #@tullio esw[i1,i2,i3,i4,i5,i6] = objectPatch[i1,i2,i3,i4,1,i6] .* probe[i1,i2,i3,1,i5,i6]
+            esw .= objectPatch .* probe
 
             # already store esw in DELTA, since intensityProjection is going to change esw
             DELTA = -1 .* esw
@@ -106,8 +128,9 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
             DELTA .+= eswUpdate
 
             # update newProbe und newObjectPatch
-            newProbe = probeUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
-            newObjectPatch = objectPatchUpdate(engine, oldObjectPatch, oldProbe, DELTA) 
+            newProbe, fracProbe = probeUpdate(engine, oldObjectPatch, oldProbe, DELTA, fracProbe, newProbe) 
+            newObjectPatch, fracObject = objectPatchUpdate(engine, oldObjectPatch, oldProbe, DELTA, 
+							   fracObject, newObjectPatch) 
             probe .= newProbe
             object[sy, sx, ..] .= newObjectPatch
         end 
