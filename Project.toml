@@ -24,6 +24,7 @@ Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 
 [compat]
 CUDA = "3.5"
+CUDAKernels = "0.3"
 ColorTypes = "0.11"
 EllipsisNotation = "1.1"
 FFTW = "1.4.5"
