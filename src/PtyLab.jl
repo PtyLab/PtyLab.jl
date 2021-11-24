@@ -23,16 +23,18 @@ using IndexFunArrays
  # for randperm
 using Random
 
-using LoopVectorization
 
- #
+ # CUDA acceleration
+using CUDA
+
+ # more acceleration!
+using CUDAKernels, KernelAbstractions
+using LoopVectorization
 using Tullio
 
  # progress bar for loops
 using ProgressMeter
 
- # CUDA acceleration
-using CUDA
 
  # @kwdef macro
 import Base.@kwdef

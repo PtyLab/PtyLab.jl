@@ -13,9 +13,13 @@ abstract type InitialProbeCirc <: InitialProbe end
 
 abstract type Reconstruction end
 
-@kwdef mutable struct ReconstructionCPM{T, A <: AbstractArray{Complex{T}, 6}} <: Reconstruction where T
+# EA can be either a normal array or it can be a CuArray
+# in best case, the full ptychogram fits on the GPU which results in EA being a CuArray
+# A is the array for the probe and the object, it is 6 dimensional!
+
+@kwdef mutable struct ReconstructionCPM{T, EA <: AbstractArray{T, 3}, A <: AbstractArray{Complex{T}, 6}} <: Reconstruction where T
     # copied from data
-    ptychogram::Union{Nothing, Array{T, N}} where N
+    ptychogram::Union{Nothing, EA}
     numFrames::Int
     energyAtPos::Vector{T}
     maxProbePower::T
@@ -80,6 +84,11 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampl
         d[:ptychogram] = MicroscopyTools.bin(d[:ptychogram], (downsampleFactor, downsampleFactor, 1))
     end
 
+    if cuda
+    	d[:ptychogram] = CuArray(d[:ptychogram])
+    end
+
+
     d[:nlambda] = 1
     d[:nosm] = 1
     d[:npsm] = 1
@@ -119,11 +128,12 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampl
     d[:probe] = nothing
 
 
+    @show typeof(d[:ptychogram])
     # do cuda yes or no
     if cuda
-    	return ReconstructionCPM{T, CuArray{Complex{T}, 6}}(; d...)
+    	return ReconstructionCPM{T, CuArray{T, 3}, CuArray{Complex{T}, 6}}(; d...)
     end
-    return ReconstructionCPM{T, Array{Complex{T}, 6}}(; d...)
+    return ReconstructionCPM{T, Array{T, 3}, Array{Complex{T}, 6}}(; d...)
 end
 
 """
@@ -175,7 +185,7 @@ end
 
 Initializes `recCPM.object` and `recCPM.probe` and stores it directly in `recCPM`.
 """
-function initializeObjectProbe!(recCPM::ReconstructionCPM{T, A}) where {T, A}
+function initializeObjectProbe!(recCPM::ReconstructionCPM{T, EA, A}) where {T, EA, A}
     Np = calc_Np(recCPM.Nd)
     xp = calc_xp(recCPM.Np, recCPM.dxp) 
 
