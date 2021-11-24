@@ -101,5 +101,5 @@ function reconstruct()
     object_gt_comp ./= sum(object_gt_comp)
     
     
-    @test all(≈(1 .+ real.(object_gt_comp), 1 .+ real.(object_comp), rtol=2e-4))
+    @test all(≈(1 .+ real.(object_gt_comp), 1 .+ real.(object_comp), rtol=2.1e-4))
 end
