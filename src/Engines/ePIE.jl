@@ -21,7 +21,7 @@ TODO memory improvements possible
 
 """
 function probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracProbe = conj.(objectPatch) ./ maximum(sum(abs2.(objectPatch), dims=3:ndims(objectPatch)))
+    fracProbe = conj.(objectPatch) ./ maximum(sum(abs2, objectPatch, dims=3:ndims(objectPatch)))
     newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
 
     return newProbe
@@ -34,7 +34,7 @@ Returns the `newobjectPatch`.
 TODO memory improvements possible
 """
 function objectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracObject = conj.(probe) ./ maximum(sum(abs2.(probe), dims=3:ndims(probe)))
+    fracObject = conj.(probe) ./ maximum(sum(abs2, probe, dims=3:ndims(probe)))
     newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
 
     return newObject
@@ -63,7 +63,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
 
     # if that flag is true, swap first and second dimension (transpose)
     if params.transposePtychogram
-        ptychogram = PermutedDimsArray(ptychogram, (2,1,3))
+        ptychogram = collect(PermutedDimsArray(ptychogram, (2,1,3)))
     end
     Np = rec.Np
 
@@ -73,6 +73,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
     oldObjectPatch = object[1:Np, 1:Np, ..]
     esw = object[1:Np, 1:Np, ..] .* probe
     
+
     # loop for iterations
     @showprogress for loop in 1:engine.numIterations
     # random order of positions or not
@@ -94,8 +95,8 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
 
             # exit surface wave,
             # tullio seems to be slower on such simple operations
-            # @tullio esw[i1,i2,i3,i4,i5,i6] = objectPatch[i1,i2,i3,i4,1,i6] .* probe[i1,i2,i3,1,i5,i6]
-            esw = objectPatch .* probe
+            @tullio esw[i1,i2,i3,i4,i5,i6] = objectPatch[i1,i2,i3,i4,1,i6] .* probe[i1,i2,i3,1,i5,i6]
+            #esw = objectPatch .* probe
 
             # already store esw in DELTA, since intensityProjection is going to change esw
             DELTA = -1 .* esw
