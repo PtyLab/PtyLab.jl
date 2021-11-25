@@ -128,7 +128,6 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampl
     d[:probe] = nothing
 
 
-    @show typeof(d[:ptychogram])
     # do cuda yes or no
     if cuda
     	return ReconstructionCPM{T, CuArray{T, 3}, CuArray{Complex{T}, 6}}(; d...)
