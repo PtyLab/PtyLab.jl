@@ -58,6 +58,9 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     f! = let    intensityConstraint = params.intensityConstraint
                 object2detector = object2detector
                 detector2object = detector2object
+                abs2_buffer = real(similar(esw_temp))
+                sum_buffer = real(similar(esw_temp, (size(esw_temp, 1), size(esw_temp, 2), 1, 1, 1, 1)))
+                frac_buffer = similar(sum_buffer) 
 		# TODO, check if better solution exists
     		Iestimated = similar(real.(rec.probe), (size(rec.probe, 1), size(rec.probe, 2)))
         function f(esw, Imeasured)
@@ -67,7 +70,9 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
                     # sum over the last three channels.
                     #@tullio Iestimated[i, j] = abs2(ESW[i,j,k,s1,s2,s3]) 
                     # that is currently faster than @tullio
-                    view(sum(abs2, ESW, dims=(3, 4, 5, 6)), :, :, 1,1,1,1)
+                    map!(abs2, abs2_buffer, ESW)
+                    #view(sum!(sum_buffer, abs2_buffer, dims=(3, 4, 5, 6)), :, :, 1,1,1,1)
+                    view(sum!(sum_buffer, abs2_buffer), :, :, 1,1,1,1)
                     # view(sum(abs2, ESW, dims=(3, 4, 5, 6)), :, :, 1,1,1,1)
                 else
                     error("Unknown intensityConstraint $intensityConstraint")
@@ -77,7 +82,7 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
             frac = let 
                 if intensityConstraint === IntensityConstraintStandard 
                     #@tullio frac[a1,a2] := sqrt(Imeasured[a1,a2] / (Iestimated[a1,a2] + gimmel))
-                     sqrt.(Imeasured ./ (Iestimated .+ gimmel))
+                     frac_buffer .= sqrt.(Imeasured ./ (Iestimated .+ gimmel))
                     # frac = sqrt.(Imeasured ./ (Iestimated .+ gimmel))
                 else
                     error("Unknown intensityConstraint")
