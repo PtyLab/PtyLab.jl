@@ -11,53 +11,66 @@ export ePIE
     numIterations::Int=50
 end
 
-
 """
-    probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
+    createUpdateFunctions(engine::ePIE{T}, objectPatch, probe, DELTA) where T
 
-Returns the `newProbe`.
+Return the functions `probeUpdate` and `objectPatchUpdate` which are used
+to update the `probe` and `objectPatch`.
 
-TODO memory improvements possible
-
+We create a lot of memory buffers.
+Note, for the `sum` operations, the dimensions over summation is already
+specified by the buffer.
 """
-function probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA,
-		     fracProbe=nothing, newProbe=nothing) where T
-    # TODO: make more elegant!
-    if isnothing(fracProbe)
-    	fracProbe = conj.(objectPatch) ./ maximum(sum(abs2, objectPatch, dims=3:ndims(objectPatch)))
-    else
-    	fracProbe .= conj.(objectPatch) ./ maximum(sum(abs2, objectPatch, dims=3:ndims(objectPatch)))
+function createUpdateFunctions(engine::ePIE{T}, objectPatch, probe, DELTA) where T
+    fracProbe = similar(objectPatch)
+    newProbe = similar(probe)
+    fracProbeDELTA = fracProbe .* DELTA
+    sumBufferNewProbe = fracProbeDELTA[:, :, 1, :, 1, 1] 
+    abs2objectPatch = real.(objectPatch)
+    sumabs2objectPatch = real(similar(objectPatch, size(objectPatch, 1), size(objectPatch, 2)))
+
+
+    fracObject = similar(probe)
+    newObject = similar(objectPatch)
+    fracObjectDELTA = fracObject .* DELTA
+    sumBufferNewObject = fracObjectDELTA[:, :, 1, 1, :, 1] 
+    abs2probe = real.(probe)
+    sumabs2probe = real(similar(probe, size(probe, 1), size(probe, 2)))
+
+    probeUpdate = let   fracProbe = fracProbe
+                        newProbe = newProbe
+                        fracProbeDELTA = fracProbeDELTA 
+                        sumBufferNewProbe = sumBufferNewProbe
+                        abs2objectPatch = abs2objectPatch
+                        sumabs2objectPatch = sumabs2objectPatch 
+        function probeUpdate(objectPatch, probe, DELTA) where T
+            abs2objectPatch .= abs2.(objectPatch)
+            fracProbe .= conj.(objectPatch) ./ maximum(sum!(sumabs2objectPatch, abs2objectPatch))
+            fracProbeDELTA .= fracProbe .* DELTA
+            newProbe .= probe .+ engine.betaProbe .* sum!(sumBufferNewProbe, fracProbeDELTA)
+            return newProbe
+        end
+    end
+   
+    objectPatchUpdate = let   fracObject = fracObject
+                        newObject = newObject
+                        fracObjectDELTA = fracObjectDELTA 
+                        sumBufferNewObject = sumBufferNewObject
+                        abs2probe = abs2probe
+                        sumabs2probe = sumabs2probe
+        function objectPatchUpdate(objectPatch, probe, DELTA) 
+            abs2probe .= abs2.(probe)
+            fracObject .= conj.(probe) ./ maximum(sum!(sumabs2probe, abs2probe))
+            fracObjectDELTA .= fracObject .* DELTA
+            newObject .= objectPatch .+ engine.betaObject .* sum!(sumBufferNewObject, fracObjectDELTA)
+            return newObject
+        end
     end
 
-    if isnothing(newProbe)
-    	newProbe = probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
-    else
-    	newProbe .= probe .+ engine.betaProbe .* sum(fracProbe .* DELTA, dims=(3, 5, 6))
-    end
-    return newProbe, fracProbe
+    return objectPatchUpdate, probeUpdate
 end
 
-"""
-    probeUpdate(engine::ePIE{T}, objectPatch, probe, DELTA) where T
 
-Returns the `newobjectPatch`.
-TODO memory improvements possible
-"""
-function objectPatchUpdate(engine::ePIE{T}, objectPatch, probe, DELTA,
-			   fracObject=nothing, newObject=nothing) where T
-    if isnothing(fracObject)
-    	fracObject = conj.(probe) ./ maximum(sum(abs2, probe, dims=3:ndims(probe)))
-    else
-    	fracObject .= conj.(probe) ./ maximum(sum(abs2, probe, dims=3:ndims(probe)))
-    end
-
-    if isnothing(newObject)
-    	newObject = objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
-    else
-    	newObject .= objectPatch .+ engine.betaObject .* sum(fracObject .* DELTA, dims=(3, 4, 6))
-    end
-    return newObject, fracObject
-end
 
 """
     reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
@@ -86,15 +99,15 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
     end
     Np = rec.Np
 
-    # copy them!
     # those are buffers
     oldProbe = copy(probe)
     oldObjectPatch = object[1:Np, 1:Np, ..]
     # just a buffer with correct shape
     esw = object[1:Np, 1:Np, ..] .* probe
+    DELTA = similar(esw)
    
-    fracProbe, newProbe = nothing, nothing
-    fracObject, newObjectPatch = nothing, nothing
+    # performant update functions for probe and patch without memory usage.
+    objectPatchUpdate, probeUpdate = createUpdateFunctions(engine, oldObjectPatch, oldProbe, DELTA)
 
     # loop for iterations
     @showprogress for loop in 1:engine.numIterations
@@ -121,16 +134,19 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
             esw .= objectPatch .* probe
 
             # already store esw in DELTA, since intensityProjection is going to change esw
-            DELTA = -1 .* esw
+            DELTA .= -1 .* esw
             eswUpdate = intensityProjection!(esw, view(ptychogram, :, :, positionIndex))
             
              # difference term
             DELTA .+= eswUpdate
 
             # update newProbe und newObjectPatch
-            newProbe, fracProbe = probeUpdate(engine, oldObjectPatch, oldProbe, DELTA, fracProbe, newProbe) 
-            newObjectPatch, fracObject = objectPatchUpdate(engine, oldObjectPatch, oldProbe, DELTA, 
-							   fracObject, newObjectPatch) 
+            #newProbe, fracProbe = probeUpdate(engine, oldObjectPatch, oldProbe, DELTA, fracProbe, newProbe) 
+            #newObjectPatch, fracObject = objectPatchUpdate(engine, oldObjectPatch, oldProbe, DELTA, 
+			#				   fracObject, newObjectPatch) 
+            #
+            newProbe = probeUpdate(oldObjectPatch, oldProbe, DELTA)
+            newObjectPatch = objectPatchUpdate(oldObjectPatch, oldProbe, DELTA)
             probe .= newProbe
             object[sy, sx, ..] .= newObjectPatch
         end 
