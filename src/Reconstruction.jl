@@ -197,7 +197,8 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T, EA, A}) where {T, E
     # handle object
     if recCPM.initialObject === InitialObjectOnes
         recCPM.object = A(undef, recCPM.shape_O)
-	fill!(recCPM.object, one(Complex{T}))
+	    fill!(recCPM.object, one(Complex{T}))
+        recCPM.object .+= A(0.01f0 .* randn(Complex{T}, recCPM.shape_O))
     else
         error("InitialObject = $(recCPM.initialObject) not valid")
     end
@@ -205,7 +206,11 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T, EA, A}) where {T, E
     # handle probe
     if recCPM.initialProbe === InitialProbeCirc
         # recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(recCPM.Nd)), recCPM.dxp) .* ones(T, recCPM.shape_O) 
-        recCPM.probe = circ(recCPM.shape_P[1:2], recCPM.xp, recCPM.entrancePupilDiameter / 2) .* ones(Complex{T}, recCPM.shape_P) 
+        recCPM.probe = A(circ(recCPM.shape_P[1:2], recCPM.xp, recCPM.entrancePupilDiameter / 2) 
+                        .* ones(Complex{T}, recCPM.shape_P)
+                        .* (0.99f0 .+ 0.01f0 .* randn(T, recCPM.shape_P))) 
+
+
     else
         error("InitialProbe = $(recCPM.initialProbe) not valid")
     end    

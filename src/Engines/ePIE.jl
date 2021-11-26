@@ -85,7 +85,7 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
 
     # if that flag is true, swap first and second dimension (transpose)
     if params.transposePtychogram
-        ptychogram = collect(PermutedDimsArray(ptychogram, (2,1,3)))
+        ptychogram = permutedims(ptychogram, (2,1,3))
     end
     Np = rec.Np
 

@@ -45,11 +45,11 @@ end
 
 
 """
-    ExperimentalDataCPM(fileName::String)
+    ExperimentalDataCPM(fileName::String, [T=Float32])
 
 Fill the `ExperimentalDataCPM` struct with data from a `*.hdf5` file.
 """
-function ExperimentalDataCPM(fileName::String)
+function ExperimentalDataCPM(fileName::String, T=Float32)
     # open h5 file
     fid = HDF5.h5open(fileName)
     @info "Reading $fid was successful"
@@ -62,8 +62,8 @@ function ExperimentalDataCPM(fileName::String)
     # the variables around more convenient
     d = Dict()
     # data
-    d[:ptychogram] = r_array("ptychogram")
-    d[:encoder] = r_array("encoder")
+    d[:ptychogram] = T.(r_array("ptychogram"))
+    d[:encoder] = T.(r_array("encoder"))
 
     # physics
     d[:wavelength] =r_number("wavelength")
