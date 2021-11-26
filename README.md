@@ -11,8 +11,11 @@ Julia Implementation of PtyLab. PtyLab is a software for Ptychography reconstruc
 The following features are implemented:
 * simple Ptychography reconstruction
 * ePIE
-* regular randomized grid
+* probe center of mass restriction
+* CUDA support
+* regular randomized grid generation
 
+The structure should be flexible to add more solvers, etc.
 
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-pink.svg
 [docs-dev-url]: https://roflmaostc.github.io/PtyLab.jl/dev/
