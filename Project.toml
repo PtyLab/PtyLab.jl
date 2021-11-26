@@ -5,22 +5,18 @@ version = "0.1.0"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-CUDAKernels = "72cfdca4-0801-4ab0-bf6a-d52aa10adc57"
 ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 FourierTools = "b18b359b-aebc-45ac-a139-9c0ccbb2871e"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 IndexFunArrays = "613c443e-d742-454e-bfc6-1d7f8dd76566"
-KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
-LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
 MicroscopyTools = "5e5ac434-ba26-417f-ab6b-a88e74d16cdd"
 NDTools = "98581153-e998-4eef-8d0d-5ec2c052313d"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 
 [compat]
 CUDA = "3.5"
@@ -30,10 +26,8 @@ FFTW = "1.4.5"
 FourierTools = "0.2.4"
 HDF5 = "0.15.6"
 IndexFunArrays = "0.2.3"
-LoopVectorization = "0.12"
 Parameters = "0.12.3"
 ProgressMeter = "1.7.1"
-Tullio = "0.3"
 
 [extras]
 ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"

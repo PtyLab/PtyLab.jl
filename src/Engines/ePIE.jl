@@ -22,46 +22,36 @@ Note, for the `sum` operations, the dimensions over summation is already
 specified by the buffer.
 """
 function createUpdateFunctions(engine::ePIE{T}, objectPatch, probe, DELTA) where T
-    fracProbe = similar(objectPatch)
-    newProbe = similar(probe)
-    fracProbeDELTA = fracProbe .* DELTA
-    sumBufferNewProbe = fracProbeDELTA[:, :, 1, :, 1, 1] 
-    abs2objectPatch = real.(objectPatch)
-    sumabs2objectPatch = real(similar(objectPatch, size(objectPatch, 1), size(objectPatch, 2)))
-
-
-    fracObject = similar(probe)
-    newObject = similar(objectPatch)
-    fracObjectDELTA = fracObject .* DELTA
-    sumBufferNewObject = fracObjectDELTA[:, :, 1, 1, :, 1] 
-    abs2probe = real.(probe)
-    sumabs2probe = real(similar(probe, size(probe, 1), size(probe, 2)))
-
-    probeUpdate = let   fracProbe = fracProbe
-                        newProbe = newProbe
-                        fracProbeDELTA = fracProbeDELTA 
-                        sumBufferNewProbe = sumBufferNewProbe
-                        abs2objectPatch = abs2objectPatch
-                        sumabs2objectPatch = sumabs2objectPatch 
+    # the let statement is used such that the variables are available in the
+    # functions as closures. The actualy operation is not meaningful but
+    # instead we want to be sure to have the right shape 
+    probeUpdate = let   fracProbe = similar(objectPatch) 
+                        newProbe = similar(probe) 
+                        fracProbeDELTA = fracProbe .* DELTA
+                        sumBufferNewProbe = sum(fracProbeDELTA, dims=(3,4,6)) 
+                        abs2objectPatch = real.(objectPatch)
+                        sumabs2objectPatch = sum(abs2objectPatch, dims=(3,4,5,6))
         function probeUpdate(objectPatch, probe, DELTA) where T
             abs2objectPatch .= abs2.(objectPatch)
             fracProbe .= conj.(objectPatch) ./ maximum(sum!(sumabs2objectPatch, abs2objectPatch))
             fracProbeDELTA .= fracProbe .* DELTA
+            #@show size(newProbe), size(probe), size(sumBufferNewProbe), size(fracProbeDELTA)
             newProbe .= probe .+ engine.betaProbe .* sum!(sumBufferNewProbe, fracProbeDELTA)
             return newProbe
         end
     end
    
-    objectPatchUpdate = let   fracObject = fracObject
-                        newObject = newObject
-                        fracObjectDELTA = fracObjectDELTA 
-                        sumBufferNewObject = sumBufferNewObject
-                        abs2probe = abs2probe
-                        sumabs2probe = sumabs2probe
+    objectPatchUpdate = let   fracObject = similar(probe)
+        newObject = similar(objectPatch) 
+                        fracObjectDELTA = fracObject .* DELTA
+                        sumBufferNewObject = sum(fracObjectDELTA, dims=(3,5,6))
+                        abs2probe = real.(probe)
+                        sumabs2probe = sum(abs2probe, dims=(3,4,5,6))
         function objectPatchUpdate(objectPatch, probe, DELTA) 
             abs2probe .= abs2.(probe)
             fracObject .= conj.(probe) ./ maximum(sum!(sumabs2probe, abs2probe))
             fracObjectDELTA .= fracObject .* DELTA
+            #@show size(newObject), size(objectPatch), size(sumBufferNewObject), size(fracObjectDELTA)
             newObject .= objectPatch .+ engine.betaObject .* sum!(sumBufferNewObject, fracObjectDELTA)
             return newObject
         end

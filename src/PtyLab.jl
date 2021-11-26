@@ -27,11 +27,6 @@ using Random
  # CUDA acceleration
 using CUDA
 
- # more acceleration!
-using CUDAKernels, KernelAbstractions
-using LoopVectorization
-using Tullio
-
  # progress bar for loops
 using ProgressMeter
 

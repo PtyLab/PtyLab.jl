@@ -185,6 +185,11 @@ end
 Initializes `recCPM.object` and `recCPM.probe` and stores it directly in `recCPM`.
 """
 function initializeObjectProbe!(recCPM::ReconstructionCPM{T, EA, A}) where {T, EA, A}
+
+    recCPM.shape_O = (recCPM.No, recCPM.No, recCPM.nlambda, recCPM.nosm, 1, recCPM.nslice)
+    recCPM.shape_P = (calc_Np(recCPM.Nd), calc_Np(recCPM.Nd), recCPM.nlambda, 1, recCPM.npsm, recCPM.nslice)
+
+
     Np = calc_Np(recCPM.Nd)
     xp = calc_xp(recCPM.Np, recCPM.dxp) 
 
@@ -200,7 +205,7 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T, EA, A}) where {T, E
     # handle probe
     if recCPM.initialProbe === InitialProbeCirc
         # recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(recCPM.Nd)), recCPM.dxp) .* ones(T, recCPM.shape_O) 
-        recCPM.probe = circ(recCPM.shape_P, recCPM.xp, recCPM.entrancePupilDiameter / 2) .* ones(Complex{T}, recCPM.shape_P) 
+        recCPM.probe = circ(recCPM.shape_P[1:2], recCPM.xp, recCPM.entrancePupilDiameter / 2) .* ones(Complex{T}, recCPM.shape_P) 
     else
         error("InitialProbe = $(recCPM.initialProbe) not valid")
     end    
