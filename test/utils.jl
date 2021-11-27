@@ -5,6 +5,12 @@
         @test PtyLab.circ((1, 5), 2, 1.01) == Bool[0 1 1 1 0]
         @test PtyLab.circ((1, 5), 2, 1) == Bool[0 0 1 0 0]
         @test PtyLab.circ((5,), 2, 1) == Bool[0, 0, 1, 0, 0]
+        
+        @test PtyLab.circ(1f0, 2f0, 6f0) == true 
+        @test PtyLab.circ(2f0, 2f0, 6f0) == true 
+        @test PtyLab.circ(2.5, 2.5, 6.0) == false 
+        @test PtyLab.circ(-2.5, -2.5, 6.0) == false 
+        @test PtyLab.circ(-2.0, 0.0001, 4.0) == false 
     end
 
 

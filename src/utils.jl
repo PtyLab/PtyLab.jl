@@ -24,6 +24,16 @@ end
 
 
 """
+    circ(x::T, y::T, D::T) where T
+
+Return true if `x^2 + <^2 < (D/2)^2`.
+"""
+function circ(x::T, y::T, D::T) where T
+    circle = (x^2 + y^2) < (D * T(0.5)) ^2
+    return circle
+end
+
+"""
     randpermPositions(arr::AbstractArray{T, 2}) where T
 
 Random shuffle the columns of a matrix.
