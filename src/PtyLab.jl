@@ -59,8 +59,11 @@ include("Params.jl")
 include("Operators.jl")
 
  # different reconstruction engines
+abstract type Engines end
 include("Engines.jl")
 include("Engines/ePIE.jl")
+include("Engines/zPIE.jl")
+include("Engines/PIE_helpers.jl")
 
 
  # some utilities

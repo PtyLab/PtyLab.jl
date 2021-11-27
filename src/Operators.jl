@@ -1,4 +1,21 @@
-export Fraunhofer
+export Fraunhofer, ASPW
+
+"""
+    _plan_fft!_cuda_FFTW(T, arr, dims, FFTW_flags)
+    
+"""
+function _plan_fft!_cuda_FFTW(T, arr, dims, FFTW_flags)
+    # planning can overwritte array sometimes!
+    # only FFTW allows different flags
+    p = if T <: CuArray
+            plan_fft!(similar(arr), dims)
+        else
+            plan_fft!(similar(arr), dims, flags=FFTW_flags)
+    end
+    return p
+end
+
+
 
 """
     Fraunhofer(arr; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEASURE)
@@ -15,17 +32,10 @@ julia> o2d, d2o = Fraunhofer(arr)
 """
 function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEASURE) where T
 
-    # planning can overwritte array sometimes!
-    # only FFTW allows different flags
-    p = if T <: CuArray
-            plan_fft!(similar(arr), dims)
-        else
-            plan_fft!(similar(arr), dims, flags=FFTW_flags)
-    end
 
     # those let blocks are required because of 
     # https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
-
+    p = _plan_fft!_cuda_FFTW(T, arr, dims, FFTW_flags)
 
     # create object to detector 
     o2d! = let p=p
@@ -52,4 +62,39 @@ function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEAS
     else
         return o2d!, d2o!
     end
+end
+
+"""
+    ASPW(u::A, z::T, wavelength::T, L::T; dims=(1,2), FFTW_flags=FFTW.MEASURE)
+
+
+Create a method `d2o(u, H=H)` which can efficienty propagate a field with
+the angular spectrum method.
+
+# TODO
+* untested
+"""
+function ASPW(u::A, z::T, wavelength::T, L::T; dims=(1,2), FFTW_flags=FFTW.MEASURE) where {A, T}
+    p = _plan_fft!_cuda_FFTW(A, u, dims, FFTW_flags)
+
+    k = T(2π) / wavelength
+    N = size(u, 1)
+    X = T.(range(-N/2, N/2, length=N+1)[begin:end-1] / L)
+    Fx, Fy = X, X' 
+
+    f_max = L / (wavelength * sqrt(L^2 + 4 * z^2))
+
+    d2o = let 
+        # circ introduces a frequency limit for the transfer function H
+        W = circ.(Fx, Fy, 2 * f_max)
+        H = W .* cis.(k * z * sqrt.(0im .+ 1 .- (Fx .* wavelength).^2 .- (Fy .* wavelength).^2)) 
+        
+        function d2o(u, H=H)
+            # fourier transforms are in-place
+            U = p * u
+            u = inv(p) * (U .* H)
+            return u 
+        end
+    end
+    return d2o
 end
