@@ -10,12 +10,12 @@ export zPIE
     betaProbe::T=0.25f0
     betaObject::T=0.25f0
     numIterations::Int=50
-    DoF::T = 1
+    DoF::T = 1f0
     # gradient step size for axial position correction (typical range [1, 100])
-    zPIEgradientStepSize::T = 100  
+    zPIEgradientStepSize::T = 100f0 
     zPIEfriction::T = 0.7f0
-    focusObject::Bool = True
-    zMomentum::T = 0
+    focusObject::Bool = true
+    zMomentum::T = 0f0
 end
 
 
@@ -39,32 +39,38 @@ function reconstruct(engine::zPIE{T}, params::Params, rec::ReconstructionCPM{T})
     
     nlambda_mid = rec.nlambda ÷ 2 + 1
 
+    zMomentum = zero(T)
     # loop for iterations
+    aspw_prop = ASPW(esw[:, :, 1,1,1,1], rec.zo, rec.spectralDensity[nlambda_mid], rec.Lp)  
+    
     @showprogress for loop in 1:engine.numIterations
 
         if loop == 1
-            zNew = reconstructio
+            zNew = rec.zo 
         else
             dz = range(-rec.DoF, rec.DoF, length=11)
-            merit = Vector{T}[]
+            # vector of Float32, Float64, ... 
+            merit = T[]
             
-            object_tmp = rec.object[end÷2 - rec.Np÷2 + 1 : end ÷ 2 + n ÷ 2, end÷2 - rec.Np÷2 + 1 : end ÷ 2 + n ÷ 2, nlambda,1,1,1]
-            @warn "Fix ASWP prop such that it is outside of loop!"
-            aspw_prop = ASPW(object_tmp, rec.zo, rec.spectralDensity[nlambda_mid], rec.Lp)  
+            object_tmp = rec.object[end÷2 - rec.Np÷2 + 1 : end ÷ 2 + rec.Np ÷ 2, 
+                                    end÷2 - rec.Np÷2 + 1 : end ÷ 2 + rec.Np ÷ 2, rec.nlambda,1,1,1]
             for k = 1:length(dz)
-                imProp =  aspw_prop(imgProp)
+                imProp =  aspw_prop(copy(object_tmp), ASPW_kernel(object_tmp, dz[k], rec.spectralDensity[nlambda_mid], rec.Lp))
                 aleph = 1f-2
                 gradx = imProp .- circshift(imProp, (0, 1))
                 grady = imProp .- circshift(imProp, (1, 0))
-                merit = push!(merit, sum(sqrt.( abs2.(gradx) + abs2.(grady) .+ aleph)))
+                value_merit = sum(sqrt.( abs2.(gradx) + abs2.(grady) .+ aleph))
+                #@show value_merit
+                merit = push!(merit, value_merit)
             end
             zStep = sum(dz .* merit) / sum(merit);
             eta = 0.7;
-            zMomentum = eta * zMomentum + obj.params.zPIEstepSize * zStep;
-            zNew = obj.zo + zMomentum;
+            zMomentum = eta * zMomentum + engine.zPIEgradientStepSize * zStep;
+            zNew = rec.zo + zMomentum;
+            @show zNew
         end
 
-        rec.z = zNew
+        rec.zo = zNew
 
         # critical optimization steps
         _loopUpdatePIE!(params.randPositionOrder, positions, Np, ptychogram, 
