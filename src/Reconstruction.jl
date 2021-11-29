@@ -28,7 +28,6 @@ abstract type Reconstruction end
     # detector sampling
     dxd::T
     xd::Vector{T}
-    dxp::T
     Nd::Int
     Ld::T
     # distance to detector 
@@ -101,8 +100,6 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampl
     d[:purityObject] = T(1)
 
 
-    d[:dxp] = d[:wavelength] * d[:zo] / d[:Ld] 
-
     # if entrancePupilDiameter is not provided in the hdf5 file, set it to be one third of the probe FoV.
     d[:entrancePupilDiameter] = 
         let 
@@ -148,7 +145,7 @@ function Base.getproperty(recCPM::ReconstructionCPM, sym::Symbol)
     if hasproperty(recCPM, sym)
         return getfield(recCPM, sym)
     elseif sym === :DoF
-        return calc_DoF(recCPM.lambda, recCPM.wavelength) 
+        return calc_DoF(recCPM.wavelength, calc_NAd(recCPM.Ld, recCPM.zo)) 
     elseif sym === :NAd
         return calc_NAd(recCPM.Ld, recCPM.zo) 
     elseif sym === :Ld
@@ -173,6 +170,8 @@ function Base.getproperty(recCPM::ReconstructionCPM, sym::Symbol)
         return calc_NAd(recCPM.Ld, recCPM.zo) 
     elseif sym === :positions
         return calc_positions(CPM, recCPM.encoder, recCPM.dxo, recCPM.No, recCPM.Np) 
+    elseif sym === :dxp
+        return calc_dxp(recCPM.wavelength, recCPM.zo, recCPM.Ld)
     else
         error("$(sym) is not a field or dependent field.")
     end

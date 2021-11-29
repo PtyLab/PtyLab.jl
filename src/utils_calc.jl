@@ -121,6 +121,12 @@ calc_dxo(dxp) = dxp
 calc_Lo(No, dxo) = No * dxo 
 
 
+"""
+    calc_dxp(wavelength, zo, Ld)
+
+"""
+calc_dxp(wavelength, zo, Ld) = wavelength * zo / Ld
+
 
 """
     calc_positions(::CPM, encoder, dxo, No, Np)

@@ -34,4 +34,5 @@
     @test PtyLab.calc_DoF(550e-9, 0.1) ≈ 55e-6
 
 
+    @test PtyLab.calc_dxp(5.5f-7, 0.1f0, 0.001f0) == 5.4999993f-5
 end
