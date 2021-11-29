@@ -38,12 +38,15 @@ function reconstruct(engine::zPIE{T}, params::Params, rec::ReconstructionCPM{T})
         _prepareBuffersAndFunctionsPIE(rec, params, engine)
     
     nlambda_mid = rec.nlambda ÷ 2 + 1
+    
+    # first prop function
+    aspw_prop = ASPW(esw[:, :, 1,1,1,1], rec.zo, rec.spectralDensity[nlambda_mid], rec.Lp)  
 
     zMomentum = zero(T)
     # loop for iterations
-    aspw_prop = ASPW(esw[:, :, 1,1,1,1], rec.zo, rec.spectralDensity[nlambda_mid], rec.Lp)  
-    
-    @showprogress for loop in 1:engine.numIterations
+    # progress meter w
+    p = Progress(engine.numIterations)
+    for loop in 1:engine.numIterations
 
         if loop == 1
             zNew = rec.zo 
@@ -55,19 +58,18 @@ function reconstruct(engine::zPIE{T}, params::Params, rec::ReconstructionCPM{T})
             object_tmp = rec.object[end÷2 - rec.Np÷2 + 1 : end ÷ 2 + rec.Np ÷ 2, 
                                     end÷2 - rec.Np÷2 + 1 : end ÷ 2 + rec.Np ÷ 2, rec.nlambda,1,1,1]
             for k = 1:length(dz)
-                imProp =  aspw_prop(copy(object_tmp), ASPW_kernel(object_tmp, dz[k], rec.spectralDensity[nlambda_mid], rec.Lp))
+                H = ASPW_kernel(object_tmp, dz[k], rec.spectralDensity[nlambda_mid], rec.Lp)
+                imProp =  aspw_prop(copy(object_tmp), H)
                 aleph = 1f-2
                 gradx = imProp .- circshift(imProp, (0, 1))
                 grady = imProp .- circshift(imProp, (1, 0))
                 value_merit = sum(sqrt.( abs2.(gradx) + abs2.(grady) .+ aleph))
-                #@show value_merit
                 merit = push!(merit, value_merit)
             end
             zStep = sum(dz .* merit) / sum(merit);
             eta = 0.7;
             zMomentum = eta * zMomentum + engine.zPIEgradientStepSize * zStep;
             zNew = rec.zo + zMomentum;
-            @show zNew
         end
 
         rec.zo = zNew
@@ -80,6 +82,7 @@ function reconstruct(engine::zPIE{T}, params::Params, rec::ReconstructionCPM{T})
         # enforce some constraints like COM
         enforceConstraints!(rec, params)
 
+        ProgressMeter.next!(p; showvalues = [(:iter, loop), (:zo, rec.zo)])
     end
     return probe, object
 end
