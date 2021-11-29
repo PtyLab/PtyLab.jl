@@ -77,18 +77,8 @@ the angular spectrum method.
 function ASPW(u::A, z::T, wavelength::T, L::T; dims=(1,2), FFTW_flags=FFTW.MEASURE) where {A, T}
     p = _plan_fft!_cuda_FFTW(A, u, dims, FFTW_flags)
 
-    k = T(2π) / wavelength
-    N = size(u, 1)
-    X = T.(range(-N/2, N/2, length=N+1)[begin:end-1] / L)
-    Fx, Fy = X, X' 
-
-    f_max = L / (wavelength * sqrt(L^2 + 4 * z^2))
-
     d2o = let 
-        # circ introduces a frequency limit for the transfer function H
-        W = circ.(Fx, Fy, 2 * f_max)
-        H = W .* cis.(k * z * sqrt.(0im .+ 1 .- (Fx .* wavelength).^2 .- (Fy .* wavelength).^2)) 
-        
+        H = ASPW_kernel(u, z, wavelength, L) 
         function d2o(u, H=H)
             # fourier transforms are in-place
             U = p * u
@@ -97,4 +87,25 @@ function ASPW(u::A, z::T, wavelength::T, L::T; dims=(1,2), FFTW_flags=FFTW.MEASU
         end
     end
     return d2o
+end
+
+"""
+    ASPW_kernel(u::A, z::T, wavelength::T, L::T) where {A, T}
+
+Calculates the kernel which is multiplied in Fourier space for the ASPW propagation.
+It is centered around `(1,1)`.
+"""
+function ASPW_kernel(u::A, z::T, wavelength::T, L::T) where {A, T}
+    k = T(2π) / wavelength
+    N = size(u, 1)
+
+    Fx = similar(u, real(eltype(u)), N)
+    Fx .= fftfreq(N, N / L)
+    Fy = Fx'
+    f_max = L / (wavelength * sqrt(L^2 + 4 * z^2))
+
+    W = ifftshift(circ.(Fx, Fy, 2 * f_max))
+    H = W .* cis.(k * z * sqrt.(0im .+ 1 .- (Fx .* wavelength).^2 .- (Fy .* wavelength).^2)) 
+    
+    return H
 end
