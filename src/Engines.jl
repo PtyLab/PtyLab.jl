@@ -70,7 +70,6 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     end
 
 
-    @show sum(mask) / length(mask)
 
     @warn "gimmel is currently estimated as `100 * eps($T)`"
     gimmel = 100 * eps(T)
