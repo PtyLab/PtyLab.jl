@@ -16,7 +16,6 @@ abstract type Reconstruction end
 # EA can be either a normal array or it can be a CuArray
 # in best case, the full ptychogram fits on the GPU which results in EA being a CuArray
 # A is the array for the probe and the object, it is 6 dimensional!
-
 @kwdef mutable struct ReconstructionCPM{T, EA <: AbstractArray{T, 3}, A <: AbstractArray{Complex{T}, 6}} <: Reconstruction where T
     # copied from data
     ptychogram::Union{Nothing, EA}
@@ -29,6 +28,13 @@ abstract type Reconstruction end
     dxd::T
     xd::Vector{T}
     Nd::Int
+    # if there are multiple sensors, the size in each dimensions
+    # for the smal sensors are listed here
+    Nd1::Union{Nothing, Int}
+    Nd2::Union{Nothing, Int}
+    # positions of the detectors. The position indicates the top left corner
+    # of the respective detector
+    posDetectors::Union{Nothing, Vector{Tuple{Float32, Float32}}}
     Ld::T
     # distance to detector 
     zo::T

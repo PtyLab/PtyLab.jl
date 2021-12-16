@@ -52,7 +52,26 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     esw_temp = rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe
     object2detector, detector2object = params.propagatorType(esw_temp)
       
-    
+
+    # if those two variables are set, we are only allowed to apply the updates
+    # on known sensor values
+    multiSensor = (!isnothing(rec.Nd1)) && (!isnothing(rec.Nd2))
+
+    mask = let
+        if multiSensor
+            arr = similar(rec.ptychogram, rec.Nd1, rec.Nd2, length(rec.posDetectors))
+            fill!(arr, 1)
+            mask = assembleMultiSensorPtychogram(arr, rec.Nd, rec.Nd1, 
+                                          rec.Nd2, rec.posDetectors, rec.Ld, rec.dxd)[:, :, 1]
+            mask = ifftshift(mask)
+        else
+            nothing
+        end
+    end
+
+
+    @show sum(mask) / length(mask)
+
     @warn "gimmel is currently estimated as `100 * eps($T)`"
     gimmel = 100 * eps(T)
     f! = let    intensityConstraint = params.intensityConstraint
@@ -83,8 +102,12 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
                 end
             end
 
-            # update ESW
-            ESW .*= frac
+            # update ESW and if there is as mask (for multiple sensors)
+            if isnothing(mask)
+                ESW .*= frac 
+            else
+                ESW .*= frac .* mask 
+            end
 
             # back to detector, memory free due to plan_fft!
             eswUpdate = detector2object(ESW)
