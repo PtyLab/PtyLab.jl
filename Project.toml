@@ -19,13 +19,14 @@ ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
-CUDA = "3.5"
+CUDA = "3.7"
 ColorTypes = "0.11"
-EllipsisNotation = "1.1"
+EllipsisNotation = "1"
 FFTW = "1.4.5"
-FourierTools = "0.2.4"
-HDF5 = "0.15.6"
+FourierTools = "0.2.5"
+HDF5 = "0.15"
 IndexFunArrays = "0.2.3"
+MicroscopyTools = "0.1"
 Parameters = "0.12.3"
 ProgressMeter = "1.7.1"
 
