@@ -57,7 +57,7 @@ end
 Fill the `ExperimentalDataCPM` struct with data from a `*.hdf5` file.
 `T` converts all float numbers (including array) to type of `T`.
 """
-function ExperimentalDataCPM(fileName::String, T=Float32)
+function ExperimentalDataCPM(fileName::String, T=Float32; Nd=nothing)
     # open h5 file
     fid = HDF5.h5open(fileName)
     @info "Reading $fid was successful"
@@ -75,7 +75,6 @@ function ExperimentalDataCPM(fileName::String, T=Float32)
     d = Dict()
     # data
     d[:ptychogram] = r_array("ptychogram")
-
 
     d[:encoder] = r_array("encoder")
 
@@ -111,13 +110,11 @@ function ExperimentalDataCPM(fileName::String, T=Float32)
     
 
     # derived properties
-    d[:Nd] = calc_Nd(d[:ptychogram])
+    d[:Nd] = isnothing(Nd) ? calc_Nd(d[:ptychogram]) : Nd
     d[:Ld] = calc_Ld(d[:Nd], d[:dxd])
 
     # change ptychogram in case of multiple sensors
     if !isnothing(d[:Nd1]) && !isnothing(d[:Nd2])
-        @warn "factor 5 is another guess. Should be either stored in the experimental Data or better, retrieved from the sensor pos and the sizes of it"
-        d[:Nd] = calc_Nd(d[:ptychogram]) * 5
         d[:Ld] = calc_Ld(d[:Nd], d[:dxd])
         d[:ptychogram] = assembleMultiSensorPtychogram(d[:ptychogram], d[:Nd], d[:Nd1], 
                                                        d[:Nd2], d[:posDetectors], d[:Ld], d[:dxd])
