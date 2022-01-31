@@ -25,4 +25,9 @@
         end
     end
 
+
+    @testset "calc_overlap" begin
+        @test PtyLab.calc_overlap(5, 10) == 0.5
+        @test PtyLab.calc_overlap(1, 10) == 0.9
+    end
 end

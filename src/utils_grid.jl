@@ -16,6 +16,16 @@ end
 
 
 """
+    calc_overlap(scan_step_size, diameter_illumination)
+
+Calculate the linear overlap given by `1 - scan_step_size / diameter_illumination`.
+"""
+function calc_overlap(scan_step_size, diameter_illumination)
+    return one(scan_step_size) - scan_step_size / (diameter_illumination)
+end
+
+
+"""
     GridRegularRand(grid_size, tile_size, points, overlap)
 
 Defines a regular grid which has random offsets.
@@ -28,20 +38,20 @@ struct GridRegularRand <: PositionOrder
 end
 
 """
-    grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10)
+    grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10;
+                      diameter_illumination=tile_size[1] / 2;
 
 Returns a regular grid with `N` points per first dimension and `M` per second.
 With random offsets (from the set `-rand_offset:rand_offset`) to each of the coordinates.
-
 """
-function grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10)
+function grid_regular_rand(grid_size, tile_size, (N, M), rand_offset=10; diameter_illumination=tile_size[1] / 2)
 
     # regular positions which need to be randomly disturbed
     is = round.(Ref(Int), range(1, grid_size[1] - tile_size[1], length=N))
     js = round.(Ref(Int), range(1, grid_size[2] - tile_size[2], length=M))
    
     # linear overlap for each direction
-    overlap = max(0, 1 - (is[2] - is[1]) / tile_size[1]), max(0, 1 - (js[2] - js[1]) / tile_size[2]) 
+    overlap = max(0, calc_overlap(is[2] - is[1], diameter_illumination)), max(0, calc_overlap(js[2] - js[1], diameter_illumination)) 
     # struct storing all the output information
     grr = GridRegularRand(grid_size, tile_size, Vector{Tile}[], overlap)
 
