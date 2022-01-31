@@ -26,6 +26,7 @@ end
 Reconstruct a CPM dataset.
 """
 function reconstruct(engine::zPIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
+    @warn "zPIE is not fully functional currently!"
     # calculate the positions since rec.positions is in fact every time
     # recalculated when called! 
     positions = rec.positions

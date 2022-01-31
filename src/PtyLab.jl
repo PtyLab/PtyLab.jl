@@ -62,8 +62,10 @@ include("Operators.jl")
 abstract type Engines end
 include("Engines.jl")
 include("Engines/ePIE.jl")
+
 # not working in the current state
-#include("Engines/zPIE.jl")
+include("Engines/zPIE.jl")
+
 include("Engines/PIE_helpers.jl")
 
 
