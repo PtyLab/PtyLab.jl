@@ -1,5 +1,6 @@
 export Fraunhofer, ASPW
 
+
 """
     _plan_fft!_cuda_FFTW(T, arr, dims, FFTW_flags)
     
@@ -62,50 +63,4 @@ function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEAS
     else
         return o2d!, d2o!
     end
-end
-
-"""
-    ASPW(u::A, z::T, wavelength::T, L::T; dims=(1,2), FFTW_flags=FFTW.MEASURE)
-
-
-Create a method `d2o(u, H=H)` which can efficienty propagate a field with
-the angular spectrum method.
-
-# TODO
-* untested
-"""
-function ASPW(u::A, z::T, wavelength::T, L::T; dims=(1,2), FFTW_flags=FFTW.MEASURE) where {A, T}
-    p = _plan_fft!_cuda_FFTW(A, u, dims, FFTW_flags)
-
-    d2o = let 
-        H = ASPW_kernel(u, z, wavelength, L) 
-        function d2o(u, H=H)
-            # fourier transforms are in-place
-            U = p * u
-            u = inv(p) * (U .* H)
-            return u 
-        end
-    end
-    return d2o
-end
-
-"""
-    ASPW_kernel(u::A, z::T, wavelength::T, L::T) where {A, T}
-
-Calculates the kernel which is multiplied in Fourier space for the ASPW propagation.
-It is centered around `(1,1)`.
-"""
-function ASPW_kernel(u::A, z::T, wavelength::T, L::T) where {A, T}
-    k = T(2π) / wavelength
-    N = size(u, 1)
-
-    Fx = similar(u, real(eltype(u)), N)
-    Fx .= fftfreq(N, N / L)
-    Fy = Fx'
-    f_max = L / (wavelength * sqrt(L^2 + 4 * z^2))
-
-    W = ifftshift(circ.(Fx, Fy, 2 * f_max))
-    H = W .* cis.(k * z * sqrt.(0im .+ 1 .- (Fx .* wavelength).^2 .- (Fy .* wavelength).^2)) 
-    
-    return H
 end
