@@ -4,11 +4,19 @@ export ePIE
 
 
 """
-    @with_kw mutable struct ePIE{T} <: Engines
+    @with_kw struct ePIE{T} <: Engines
 
-`ePIE` is a struct to store important parameters for the `ePIE::Engine` 
+`ePIE` is a struct to store important parameters for the `ePIE::Engine`.
+In most cases you want to initialize the numbers as `Float32` for higher performance.
+Needs to be the same datatype as your object you want to reconstruct.
+
+
+# Parameters
+* `betaProbe=0.25f0`
+* `betaObject=0.25f0`
+* `numIterations::Int=50`
 """
-@with_kw mutable struct ePIE{T} <: Engines
+@with_kw struct ePIE{T} <: Engines
     betaProbe::T=0.25f0
     betaObject::T=0.25f0
     numIterations::Int=50
@@ -20,6 +28,8 @@ end
     reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
 
 Reconstruct a CPM dataset.
+
+
 """
 function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T}) where T 
     # calculate the positions since rec.positions is in fact every time
@@ -41,29 +51,10 @@ function reconstruct(engine::ePIE{T}, params::Params, rec::ReconstructionCPM{T})
                         intensityProjection!, probeUpdate, objectPatchUpdate)
         
         # enforce some constraints like COM
+        # causes some allocations since circshift causes them 
+        # for higher dimensional arrays
         enforceConstraints!(rec, params)
 
     end
     return probe, object
-end
-
-
-
-function f(randPositionOrder, positions, Np, ptychogram, 
-                        object, oldObjectPatch, oldProbe, probe, esw, DELTA,
-                        intensityProjection!, probeUpdate, objectPatchUpdate, numIterations)
-    # loop for iterations
-    @showprogress for loop in 1:numIterations
-        # critical optimization steps
-        _loopUpdatePIE!(randPositionOrder, positions, Np, ptychogram, 
-                        object, oldObjectPatch, oldProbe, probe, esw, DELTA,
-                        intensityProjection!, probeUpdate, objectPatchUpdate)
-        
-        # enforce some constraints like COM
-        #enforceConstraints!(rec, params)
-
-    end
-
-    return probe, object
-
 end
