@@ -5,10 +5,10 @@ export InitialObject, InitialObjectOnes
 export InitialProbe, InitialProbeCirc
 
 abstract type InitialObject end
-abstract type InitialObjectOnes <:InitialObject end
+struct InitialObjectOnes <:InitialObject end
 
 abstract type InitialProbe end
-abstract type InitialProbeCirc <: InitialProbe end
+struct InitialProbeCirc <: InitialProbe end
 
 
 abstract type Reconstruction end
@@ -16,7 +16,10 @@ abstract type Reconstruction end
 # EA can be either a normal array or it can be a CuArray
 # in best case, the full ptychogram fits on the GPU which results in EA being a CuArray
 # A is the array for the probe and the object, it is 6 dimensional!
-@kwdef mutable struct ReconstructionCPM{T, EA <: AbstractArray{T, 3}, A <: AbstractArray{Complex{T}, 6}} <: Reconstruction where T
+@kwdef mutable struct ReconstructionCPM{T, EA <: AbstractArray{T, 3}, 
+                                         A <: AbstractArray{Complex{T}, 6},
+                                        IO <: InitialObject,
+                                        IP <: InitialProbe} <: Reconstruction where T
     # copied from data
     ptychogram::Union{Nothing, EA}
     numFrames::Int
@@ -55,8 +58,8 @@ abstract type Reconstruction end
     purityProbe::T
     purityObject::T
     # optional parameters
-    initialObject::Type{<:InitialObject}
-    initialProbe::Type{<:InitialProbe}
+    initialObject::IO
+    initialProbe::IP
     # reconstructions
     object::Union{Nothing, A}
     probe::Union{Nothing, A}
@@ -119,8 +122,8 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampl
     # wrap in array if not provided
     d[:spectralDensity] = isnothing(d[:spectralDensity]) ? [d[:wavelength]] : d[:spectralDensity]
 
-    d[:initialObject] = InitialObjectOnes
-    d[:initialProbe] = InitialProbeCirc
+    d[:initialObject] = InitialObjectOnes()
+    d[:initialProbe] = InitialProbeCirc()
 
     d[:shape_O] = (d[:No], d[:No], d[:nlambda], d[:nosm], 1, d[:nslice])
     d[:shape_P] = (calc_Np(d[:Nd]), calc_Np(d[:Nd]), d[:nlambda], 1, d[:npsm], d[:nslice])
@@ -135,7 +138,7 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampl
     if cuda
     	return ReconstructionCPM{T, CuArray{T, 3}, CuArray{Complex{T}, 6}}(; d...)
     end
-    return ReconstructionCPM{T, Array{T, 3}, Array{Complex{T}, 6}}(; d...)
+    return ReconstructionCPM{T, Array{T, 3}, Array{Complex{T}, 6}, InitialObjectOnes, InitialProbeCirc}(; d...)
 end
 
 """
@@ -200,7 +203,7 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T, EA, A}) where {T, E
 
 
     # handle object
-    if recCPM.initialObject === InitialObjectOnes
+    if typeof(recCPM.initialObject) === InitialObjectOnes
         recCPM.object = A(undef, recCPM.shape_O)
 	    fill!(recCPM.object, one(Complex{T}))
         recCPM.object .+= A(0.01f0 .* randn(Complex{T}, recCPM.shape_O))
@@ -209,7 +212,7 @@ function initializeObjectProbe!(recCPM::ReconstructionCPM{T, EA, A}) where {T, E
     end
 
     # handle probe
-    if recCPM.initialProbe === InitialProbeCirc
+    if typeof(recCPM.initialProbe) === InitialProbeCirc
         # recCPM.probe = circ(recCPM.shape_P, calc_xp(calc_Np(recCPM.Nd)), recCPM.dxp) .* ones(T, recCPM.shape_O) 
         recCPM.probe = A(circ(recCPM.shape_P[1:2], recCPM.xp, recCPM.entrancePupilDiameter / 2) 
                         .* ones(Complex{T}, recCPM.shape_P)

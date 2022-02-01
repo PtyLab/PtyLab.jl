@@ -48,16 +48,12 @@ function reconstruct()
     reconstruction = PtyLab.initializeObjectProbe!(reconstruction);
     
     engine = PtyLab.ePIE()
-    params2 = Params()
+    params2 = Params(fftshiftFlag=false, transposePtychogram=false, comStabilizationSwitch=true)
 
     #engines.
-    params2.fftshiftFlag = false
     engine.betaProbe = 0.75f0
     engine.betaObject = 0.75f0
     
-    
-    params2.transposePtychogram = false
-    params2.comStabilizationSwitch = true
     reconstruction = PtyLab.initializeObjectProbe!(reconstruction);
     engine.numIterations = 50
     @time p, o = PtyLab.reconstruct(engine, params2, reconstruction);

@@ -14,7 +14,7 @@ function _loopUpdatePIE!(randPositionOrder, positions, Np, ptychogram,
     posList = randPositionOrder ? randperm(size(positions, 2)) : (1:size(positions, 2))
 
     for positionIndex in posList 
-        row, col = positions[:, positionIndex] 
+        row, col = view(positions, :, positionIndex) 
             
         sy = row:(row + Np - 1)
         sx = col:(col + Np - 1)
@@ -36,11 +36,13 @@ function _loopUpdatePIE!(randPositionOrder, positions, Np, ptychogram,
         DELTA .+= eswUpdate
         
         # update newProbe und newObjectPatch
-        newProbe = probeUpdate(oldObjectPatch, oldProbe, DELTA)
         newObjectPatch = objectPatchUpdate(oldObjectPatch, oldProbe, DELTA)
+        newProbe = probeUpdate(oldObjectPatch, oldProbe, DELTA)
         probe .= newProbe
         object[sy, sx, ..] .= newObjectPatch
     end 
+
+    return nothing
 end
 
 """
@@ -96,9 +98,10 @@ function createUpdateFunctions(engine::Union{ePIE{T}, zPIE{T}}, objectPatch, pro
                         newProbe = similar(probe) 
                         fracProbeDELTA = fracProbe .* DELTA
                         sumBufferNewProbe = sum(fracProbeDELTA, dims=(3,4,6)) 
-                        abs2objectPatch = real.(objectPatch)
-                        sumabs2objectPatch = sum(abs2objectPatch, dims=(3,4,5,6))
-        function probeUpdate(objectPatch, probe, DELTA) where T
+                        abs2objectPatch = similar(objectPatch, real(eltype(objectPatch)))
+                        sumabs2objectPatch = similar(abs2objectPatch, size(abs2objectPatch, 1), size(abs2objectPatch, 2),
+                                                                      1, 1, 1, 1)
+        function probeUpdate(objectPatch, probe, DELTA)
             abs2objectPatch .= abs2.(objectPatch)
             fracProbe .= conj.(objectPatch) ./ maximum(sum!(sumabs2objectPatch, abs2objectPatch))
             fracProbeDELTA .= fracProbe .* DELTA
@@ -107,12 +110,14 @@ function createUpdateFunctions(engine::Union{ePIE{T}, zPIE{T}}, objectPatch, pro
         end
     end
    
-    objectPatchUpdate = let   fracObject = similar(probe)
-        newObject = similar(objectPatch) 
-                        fracObjectDELTA = fracObject .* DELTA
-                        sumBufferNewObject = sum(fracObjectDELTA, dims=(3,5,6))
-                        abs2probe = real.(probe)
-                        sumabs2probe = sum(abs2probe, dims=(3,4,5,6))
+    objectPatchUpdate = let fracObject = similar(probe)
+                            newObject = similar(objectPatch) 
+                            fracObjectDELTA = fracObject .* DELTA
+                            sumBufferNewObject = sum(fracObjectDELTA, dims=(3,5,6))
+                            abs2probe = similar(probe, real(eltype(probe)))
+                            sumabs2probe = similar(abs2probe, size(abs2probe, 1), 
+                                                   size(abs2probe, 2),
+                                                   1, 1, 1, 1)
         function objectPatchUpdate(objectPatch, probe, DELTA) 
             abs2probe .= abs2.(probe)
             fracObject .= conj.(probe) ./ maximum(sum!(sumabs2probe, abs2probe))

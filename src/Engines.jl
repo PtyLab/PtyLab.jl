@@ -49,7 +49,7 @@ julia> eswUpdate = intensityProjection!(esw, Imeasured)
 """
 function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     # create an efficient propagator function
-    esw_temp = rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe
+    esw_temp = view(rec.object, 1:rec.Np, 1:rec.Np, ..) .* rec.probe
     object2detector, detector2object = params.propagatorType(esw_temp)
       
 
@@ -72,19 +72,15 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
 
 
     @warn "gimmel is currently estimated as `100 * eps($T)`"
-    gimmel = 100 * eps(T)
     f! = let    intensityConstraint = params.intensityConstraint
-                object2detector = object2detector
-                detector2object = detector2object
-                abs2_buffer = real(similar(esw_temp))
-                sum_buffer = real(similar(esw_temp, (size(esw_temp, 1), size(esw_temp, 2), 1, 1, 1, 1)))
+                gimmel = 100 * eps(T)
+                abs2_buffer = similar(esw_temp, real(eltype(esw_temp)))
+                sum_buffer = similar(esw_temp, real(eltype(esw_temp)), (size(esw_temp, 1), size(esw_temp, 2), 1, 1, 1, 1))
                 frac_buffer = similar(sum_buffer) 
-		# TODO, check if better solution exists
-    		Iestimated = similar(real.(rec.probe), (size(rec.probe, 1), size(rec.probe, 2)))
         function f(esw, Imeasured)
             ESW = object2detector(esw)
             Iestimated = let
-                if intensityConstraint === IntensityConstraintStandard
+                if typeof(intensityConstraint) === IntensityConstraintStandard
                     # sum over the last three channels.
                     map!(abs2, abs2_buffer, ESW)
                     view(sum!(sum_buffer, abs2_buffer), :, :, 1,1,1,1)
@@ -94,7 +90,7 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
             end
 
             frac = let 
-                if intensityConstraint === IntensityConstraintStandard 
+                if typeof(intensityConstraint) === IntensityConstraintStandard 
                      frac_buffer .= sqrt.(Imeasured ./ (Iestimated .+ gimmel))
                 else
                     error("Unknown intensityConstraint")

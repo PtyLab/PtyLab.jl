@@ -6,9 +6,10 @@ export complex_show, gray_show, show_grid
 Displays a complex array. Color encodes phase, brightness encodes magnitude.
 Works within Jupyter and Pluto.
 """
-function complex_show(cpx::AbstractArray{<:Complex, N}) where N
+function complex_show(cpx::AbstractArray{T, N}) where {T<:Complex, N}
+    Tr = real(T)
 	ac = abs.(cpx)
-	HSV.(angle.(cpx)./2pi*256, ones(Float32,size(cpx)), ac./maximum(ac))
+    HSV.(angle.(cpx)./Tr(2pi)*256, ones(Tr,size(cpx)), ac./maximum(ac))
 end
 
 
