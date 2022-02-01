@@ -136,9 +136,11 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampl
 
     # do cuda yes or no
     if cuda
-    	return ReconstructionCPM{T, CuArray{T, 3}, CuArray{Complex{T}, 6}}(; d...)
+        return ReconstructionCPM{T, CuArray{T, 3}, CuArray{Complex{T}, 6}, typeof(d[:initialObject]),
+                             typeof(d[:initialProbe])}(; d...)
     end
-    return ReconstructionCPM{T, Array{T, 3}, Array{Complex{T}, 6}, InitialObjectOnes, InitialProbeCirc}(; d...)
+    return ReconstructionCPM{T, Array{T, 3}, Array{Complex{T}, 6}, typeof(d[:initialObject]),
+                             typeof(d[:initialProbe])}(; d...)
 end
 
 """
