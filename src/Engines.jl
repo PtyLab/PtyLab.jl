@@ -59,10 +59,10 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
 
     mask = let
         if multiSensor
-            arr = similar(rec.ptychogram, rec.Nd1, rec.Nd2, length(rec.posDetectors))
+            arr = similar(rec.ptychogram, Bool, rec.Nd1, rec.Nd2, length(rec.posDetectors))
             fill!(arr, 1)
             mask = assembleMultiSensorPtychogram(arr, rec.Nd, rec.Nd1, 
-                                          rec.Nd2, rec.posDetectors, rec.Ld, rec.dxd)[:, :, 1]
+                                                 rec.Nd2, rec.posDetectors, rec.Ld, rec.dxd)[:, :, 1]
             mask = ifftshift(mask)
         else
             nothing
@@ -70,10 +70,9 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
     end
 
 
-
-    @warn "gimmel is currently estimated as `100 * eps($T)`"
+    @warn "gimmel is currently estimated as `eps($T)`"
     f! = let    intensityConstraint = params.intensityConstraint
-                gimmel = 100 * eps(T)
+                gimmel = eps(T)
                 abs2_buffer = similar(esw_temp, real(eltype(esw_temp)))
                 sum_buffer = similar(esw_temp, real(eltype(esw_temp)), (size(esw_temp, 1), size(esw_temp, 2), 1, 1, 1, 1))
                 frac_buffer = similar(sum_buffer) 
@@ -101,7 +100,12 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
             if isnothing(mask)
                 ESW .*= frac 
             else
-                ESW .*= frac .* mask 
+                # frac is only multiplied to those parts of the array
+                # where we have data available to compare with
+                # the other parts are not explicitly updated
+                # but still they are changed implicitly with forward and
+                # backward propagations
+                ESW[mask, ..] .*= frac[mask, ..]
             end
 
             # back to detector, memory free due to plan_fft!
