@@ -9,7 +9,7 @@ using Parameters
 
  # we need fft and variants
 using FFTW, FourierTools
-FFTW.set_num_threads(4)
+#FFTW.set_num_threads(4)
  # for displaying
 using ColorTypes
  # data loading

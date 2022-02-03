@@ -105,7 +105,10 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
                 # the other parts are not explicitly updated
                 # but still they are changed implicitly with forward and
                 # backward propagations
-                ESW[mask, ..] .*= frac[mask, ..]
+
+                # this line causes allocations
+                # https://github.com/JuliaLang/julia/issues/43442
+                ESW[mask, ..] .*= view(frac, mask, ..)
             end
 
             # back to detector, memory free due to plan_fft!
