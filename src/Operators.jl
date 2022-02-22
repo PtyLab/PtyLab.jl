@@ -34,26 +34,39 @@ julia> o2d, d2o = Fraunhofer(arr)
 function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEASURE) where T
 
 
+    ss = sqrt(size(arr, 1) * size(arr, 2))
     # those let blocks are required because of 
     # https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
     p = _plan_fft!_cuda_FFTW(T, arr, dims, FFTW_flags)
 
     # create object to detector 
     o2d! = let p=p
-        o2d!(x) = p * x
+        function o2d!(x)
+            px = p * x
+            px ./= ss
+        end
     end
     # same with shift
     o2ds = let p=p
-        o2ds(x) = fftshift(p * x, dims)
+        function o2ds(x)
+            px = fftshift(p * x, dims)
+            px ./= ss
+        end
     end
 
     # create detector to object without shifts 
     d2o! = let p_inv=inv(p)
-        d2o!(x) = p_inv * x
+        function d2o!(x)
+            px = p_inv * x
+            px .*= ss 
+        end
     end
 
     d2os = let p_inv=inv(p)
-        d2os(x) = p_inv * ifftshift(x, dims)
+        function d2os(x)
+            px = p_inv * ifftshift(x, dims)
+            px .*= ss 
+        end
     end
 
 
