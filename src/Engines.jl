@@ -59,7 +59,7 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
 
     mask = let
         if multiSensor
-            arr = similar(rec.ptychogram, Bool, rec.Nd1, rec.Nd2, length(rec.posDetectors))
+            arr = similar(rec.ptychogram, rec.Nd1, rec.Nd2, length(rec.posDetectors))
             fill!(arr, 1)
             mask = assembleMultiSensorPtychogram(arr, rec.Nd, rec.Nd1, 
                                                  rec.Nd2, rec.posDetectors, rec.Ld, rec.dxd)[:, :, 1]
@@ -69,10 +69,10 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
         end
     end
 
-
+            
     @warn "gimmel is currently estimated as `eps($T)`"
     f! = let    intensityConstraint = params.intensityConstraint
-                gimmel = eps(T)
+                gimmel = 100 .* eps(T)
                 abs2_buffer = similar(esw_temp, real(eltype(esw_temp)))
                 sum_buffer = similar(esw_temp, real(eltype(esw_temp)), (size(esw_temp, 1), size(esw_temp, 2), 1, 1, 1, 1))
                 frac_buffer = similar(sum_buffer) 
@@ -97,7 +97,7 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
             end
 
             # update ESW and if there is as mask (for multiple sensors)
-            if isnothing(mask)
+            if !multiSensor
                 ESW .*= frac 
             else
                 # frac is only multiplied to those parts of the array
@@ -108,7 +108,17 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
 
                 # this line causes allocations
                 # https://github.com/JuliaLang/julia/issues/43442
-                ESW[mask, ..] .*= view(frac, mask, ..)
+                #mask_buffer .= view(frac, mask, ..) 
+                #ESW[mask, ..] .*= mask_buffer
+                #mask_buffer .= ESW .* (1 .- mask)
+                #mask_buffer .+= mask .* ESW .* frac
+                #ESW .= mask_buffer
+                #ESW[mask, ..] .*= frac[mask, ..]
+                #ESW .*= frac .* mask 
+                #@time ESW[mask, ..] .*= view(frac, mask, ..)
+                ESW .*= (frac .* mask .+ 1.0f0 *  (1 .- mask))
+                #ESW .*= frac
+                #ESW .*= 2
             end
 
             # back to detector, memory free due to plan_fft!
