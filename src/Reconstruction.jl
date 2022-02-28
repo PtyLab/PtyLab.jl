@@ -74,19 +74,42 @@ initial guesses.
 
 
 ## kwargs
-* `downsampleFactor`: a downsampleFactor factor for the measured data
+* `downsampleFactor_1`: a downsampleFactor factor for the measured data
+* `cuda=false`: transfer the ptychogram to CUDA or not
+* `copyPtychogram`: whether the Ptychogram will be copied or not.
 """
-function ReconstructionCPM(data::ExperimentalDataCPM{T}; cuda = false, downsampleFactor=1) where T
+function ReconstructionCPM(data::ExperimentalDataCPM{T}; copyPtychogram=true, cuda = false, downsampleFactor=1) where T
     d = type2dict(data)
 
     # adapt detector properties
     d[:dxd] *= downsampleFactor
     d[:Nd] = d[:Nd] ÷ downsampleFactor
     
-    ns = min(size(d[:ptychogram], 1), size(d[:ptychogram], 2))
-    # crop the size along the larger dimensions
-    d[:ptychogram] = NDTools.select_region(d[:ptychogram], new_size=(ns, ns, size(d[:ptychogram], 3)))
+    if !isnothing(d[:Nd1]) && !isnothing(d[:Nd2])
+        d[:Nd1] = d[:Nd1] ÷ downsampleFactor
+        d[:Nd2] = d[:Nd2] ÷ downsampleFactor
 
+    end
+
+    ns = min(size(d[:ptychogram], 1), size(d[:ptychogram], 2))
+
+    # crop the size along the larger dimensions
+    # depending on the flag, use view or copy
+
+    if size(d[:ptychogram], 1) == size(d[:ptychogram], 2)
+        if copyPtychogram
+            # returns new array!
+            d[:ptychogram] = copy(d[:ptychogram])
+        end
+    else
+        if copyPtychogram
+            # returns new array!
+            d[:ptychogram] = NDTools.select_region(d[:ptychogram], new_size=(ns, ns, size(d[:ptychogram], 3)))
+        else
+            # returns NDTools.MutablePaddedView 
+            d[:ptychogram] = NDTools.select_region_view(d[:ptychogram], new_size=(ns, ns, size(d[:ptychogram], 3)))
+        end
+    end
     # do binning if downsampleFactor > 1
     if !isone(downsampleFactor)
         d[:ptychogram] = MicroscopyTools.bin(d[:ptychogram], (downsampleFactor, downsampleFactor, 1))
