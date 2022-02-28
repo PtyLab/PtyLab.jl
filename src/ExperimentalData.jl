@@ -101,7 +101,7 @@ function ExperimentalDataCPM(fileName::String, T=Float32; Nd=nothing)
 
 
     # optional
-    d[:entrancePupilDiameter] = r_number("entrancePupilDiameter")
+    d[:entrancePupilDiameter] = T(r_number("entrancePupilDiameter"))
     d[:spectralDensity] = r_number("spectralDensity")
     d[:theta] = r_number("theta")
 
@@ -115,6 +115,7 @@ function ExperimentalDataCPM(fileName::String, T=Float32; Nd=nothing)
 
     # change ptychogram in case of multiple sensors
     if !isnothing(d[:Nd1]) && !isnothing(d[:Nd2])
+        @info "Multi Sensor ptychogram"
         d[:Ld] = calc_Ld(d[:Nd], d[:dxd])
         d[:ptychogram] = assembleMultiSensorPtychogram(d[:ptychogram], d[:Nd], d[:Nd1], 
                                                        d[:Nd2], d[:posDetectors], d[:Ld], d[:dxd])
