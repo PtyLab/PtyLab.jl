@@ -26,15 +26,16 @@ FFTW = "1.4"
 FourierTools = "0.2.5"
 HDF5 = "0.15"
 IndexFunArrays = "0.2.3"
-NDTools = "0.4.1"
 MicroscopyTools = "0.1"
+NDTools = "0.4.1"
 Parameters = "0.12"
 ProgressMeter = "1.7"
 
 [extras]
+ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
 
 [targets]
-test = ["Test", "TestImages", "ImageIO"]
+test = ["Test", "TestImages", "ImageIO", "ImageMagick"]
