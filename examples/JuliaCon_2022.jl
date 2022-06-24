@@ -43,30 +43,35 @@ Julia implementation of PtyLab.
 # ╔═╡ 89773bf9-3c7d-400a-9cef-46d6d97a4635
 md"
 ## What is Ptychography?
-
-Schick mir ein Bild, dann kann ich es einfügen
-
 "
 
-# ╔═╡ db2c45d1-a86b-428d-a696-df01637d4ad9
+# ╔═╡ 6b336959-a3e4-42ad-8fe5-63f3f91f1f61
+md"""
+$(LocalResource("/home/fxw/dev/PtyLab.jl/examples/assets/ptychography.png", :width => 500))
+"""
 
+# ╔═╡ 0a748b81-435c-411a-ad51-c128fe2e2552
+md"""
+$(LocalResource("/home/fxw/dev/PtyLab.jl/examples/assets/ptychography2.png", :width => 500))
+"""
 
 # ╔═╡ 0f1f8cfa-477c-4133-b2c4-0e39138893d1
 md"## PtyLab.jl
-* Implementation of Iterative Ptychographic Engine (PIE)
+* Implementation of a familiy of stochastic gradient descent-type algorithms for iterative reconstruction of ptychography data sets
+* Applicable for wavefront sensing and microscopy 
 * CUDA.jl support
 * Flexible type hierarchy to add more solvers
 "
 
 # ╔═╡ ba3e98c4-8e25-405c-b342-e2aae01ec045
-md"## Allocation free style of programming
+md"## Allocation-free programming
 
 * the PIE engine needs often $≈ 50 - 300$ of iterations to converge
-* the arrays are 6 dimensions but their shapes can vary dynamically on the problem
+* the arrays are six-dimensional but their shapes can vary dynamically on the specific problem
 * we need at lot (!) memory buffers to handle
 * To not confuse the buffers we use a functional style of programming
 
-For example, the operation *detector to object* and *object to detector* is required in each iteration.
+For example, the operation *detector to object* (`d2o`) and *object to detector* (`o2d`) is required at each iteration.
 
 We create new functions which capture the outer variables.
 Because of [#15276](https://github.com/JuliaLang/julia/issues/15276) we use `let` blocks.
@@ -123,20 +128,17 @@ arr ≈ o2d_(d2o_(copy(arr)))
 # ╔═╡ d2ce7638-9765-4752-b4b5-953ef7d43003
 md"# Load a Testimage
 Let's assemble an image with an absolute intensity and a phase term.
-Absolute value is _Fabio_ whereas the phase term is a siemens star and some other features.
+Absolute value are some cells whereas the phase term is a spokes target and some other features.
 "
 
 # ╔═╡ 83dd43ee-aa6d-414d-b4a2-dec98afc8aa1
 begin
-	img_abs = Float32.(testimage("fabio_gray_512"))[200:400, 200:400]
+	img_abs = Float32.(Gray.(testimage("blobs")))[1:201, 1:201]
 	img_phase = Float32.(testimage("resolution_test_512"))[140:340, 250:450]
 
 	object = img_abs .* cispi.(2 .* img_phase)
 	complex_show(object);
 end
-
-# ╔═╡ b0c38140-9e58-4f55-83fb-2e0632a83c63
-
 
 # ╔═╡ a86151ed-c915-465b-af67-dee7a552e58c
 md"## Make a probe
@@ -145,7 +147,6 @@ Let's choose a gaussian probe despite it's not very optimal for Ptychography
 "
 
 # ╔═╡ 3394318c-7b7c-4720-8822-f7cc1bf3645f
-#tile_size = (250, 250)
 tile_size = (80, 80)
 
 # ╔═╡ 73b8c142-df52-4ed2-b35d-3d9f1b1ae707
@@ -181,7 +182,7 @@ Procedure:
 
 * extract a tile of the object which fits the size of the probe
 * multiply with probe
-* apply Fraunhofer propagation on the field
+* apply Fraunhofer propagation on the resulting field
 * `abs2` for intensity
 
 "
@@ -189,7 +190,7 @@ Procedure:
 # ╔═╡ a129a90c-cfd7-4a8a-8c37-6a5a5f4aadc2
 md"
 For performance, it's better to choose `Float32` (4 Byte) over `Float64` (8 Byte).
-Especially on GPUs, that's critical since they perform poor with `Float64`.
+Especially on GPUs, that's critical since they perform poorly with `Float64`.
 
 "
 
@@ -251,8 +252,6 @@ end
 
 # ╔═╡ 5d026111-f8e3-4e36-9d81-2970c6e74ac1
 md"# Load Dataset
-From an `.hdf5` dataset. Compatible within the PtyLab ecosystem.
-
 "
 
 # ╔═╡ d26dc7af-d4a9-45c9-9929-0017d9c82a6c
@@ -293,7 +292,7 @@ params = Params(transposePtychogram = false,
 params
 
 # ╔═╡ aac02813-e0f7-4b57-9df7-e2e768c8dbac
-md"# Select an Engine"
+md"# Select an reconstruction algorithm"
 
 # ╔═╡ 8d395f98-3138-4084-b96e-805ab12335a3
 engine = PtyLab.ePIE(numIterations=50, betaObject=0.75f0, betaProbe=0.75f0)
@@ -316,18 +315,13 @@ complex_show(Array(p)[:, :, 1,1,1,1])
 # ╔═╡ ec87b2bd-d812-4cde-8cf2-70f16dc600cc
 md"Ptychogram size: $(round(sizeof(reconstruction.ptychogram) / 2^20, digits=2)) MiB"
 
-# ╔═╡ 9effcfc6-bf47-4b39-bfa3-b94959f843d6
-
-
-# ╔═╡ 748d5712-4609-4446-ac32-d45359d26000
-
-
 # ╔═╡ Cell order:
 # ╠═5efb56cc-81c7-11ec-2b28-e71f25e0d443
 # ╠═8b2e821a-cde0-4eba-ba1b-b176456cf667
 # ╟─520b96b2-e35d-4820-8d4b-fbedd962fd92
 # ╟─89773bf9-3c7d-400a-9cef-46d6d97a4635
-# ╠═db2c45d1-a86b-428d-a696-df01637d4ad9
+# ╟─6b336959-a3e4-42ad-8fe5-63f3f91f1f61
+# ╟─0a748b81-435c-411a-ad51-c128fe2e2552
 # ╟─0f1f8cfa-477c-4133-b2c4-0e39138893d1
 # ╟─ba3e98c4-8e25-405c-b342-e2aae01ec045
 # ╠═a0545e2c-f666-4bf3-af67-336ccc0efe1d
@@ -339,7 +333,6 @@ md"Ptychogram size: $(round(sizeof(reconstruction.ptychogram) / 2^20, digits=2))
 # ╠═53a974c3-82b0-4195-a777-c6e2ec8af7cd
 # ╟─d2ce7638-9765-4752-b4b5-953ef7d43003
 # ╠═83dd43ee-aa6d-414d-b4a2-dec98afc8aa1
-# ╠═b0c38140-9e58-4f55-83fb-2e0632a83c63
 # ╟─a86151ed-c915-465b-af67-dee7a552e58c
 # ╠═3394318c-7b7c-4720-8822-f7cc1bf3645f
 # ╠═73b8c142-df52-4ed2-b35d-3d9f1b1ae707
@@ -378,5 +371,3 @@ md"Ptychogram size: $(round(sizeof(reconstruction.ptychogram) / 2^20, digits=2))
 # ╠═b7d2a8da-7f5c-4edd-b80d-59fef05bf692
 # ╠═e04e73a2-28b0-4594-8a5e-eb97ded5b1a4
 # ╟─ec87b2bd-d812-4cde-8cf2-70f16dc600cc
-# ╠═9effcfc6-bf47-4b39-bfa3-b94959f843d6
-# ╠═748d5712-4609-4446-ac32-d45359d26000
