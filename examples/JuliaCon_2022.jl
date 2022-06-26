@@ -20,11 +20,14 @@ begin
 	Pkg.activate(".")
 end
 
+# ╔═╡ 564c2e28-7dfc-4822-aa6c-a6002a23f9cb
+Pkg.add("FileIO")
+
 # ╔═╡ 8b2e821a-cde0-4eba-ba1b-b176456cf667
 begin
 	using Revise, EllipsisNotation, ImageShow
 	using PtyLab, TestImages, IndexFunArrays, FFTW, HDF5, Noise, FourierTools, CUDA
-	using PlutoUI, NDTools, Plots
+	using PlutoUI, NDTools, Plots, Colors, FileIO, ImageCore
 end
 
 # ╔═╡ 520b96b2-e35d-4820-8d4b-fbedd962fd92
@@ -45,14 +48,19 @@ md"
 ## What is Ptychography?
 "
 
+# ╔═╡ 1f7a6cce-4e3c-4c1b-b2fb-0f1c33591249
+md"""
+$(LocalResource("assets/ptychography3.png", :width => 700))
+"""
+
 # ╔═╡ 6b336959-a3e4-42ad-8fe5-63f3f91f1f61
 md"""
-$(LocalResource("/home/fxw/dev/PtyLab.jl/examples/assets/ptychography.png", :width => 500))
+$(LocalResource("assets/ptychography.png", :width => 700))
 """
 
 # ╔═╡ 0a748b81-435c-411a-ad51-c128fe2e2552
 md"""
-$(LocalResource("/home/fxw/dev/PtyLab.jl/examples/assets/ptychography2.png", :width => 500))
+$(LocalResource("assets/ptychography2.png", :width => 700))
 """
 
 # ╔═╡ 0f1f8cfa-477c-4133-b2c4-0e39138893d1
@@ -66,7 +74,7 @@ md"## PtyLab.jl
 # ╔═╡ ba3e98c4-8e25-405c-b342-e2aae01ec045
 md"## Allocation-free programming
 
-* the PIE engine needs often $≈ 50 - 300$ of iterations to converge
+* the PIE engine is an iterative algorithm
 * the arrays are six-dimensional but their shapes can vary dynamically on the specific problem
 * we need at lot (!) memory buffers to handle
 * To not confuse the buffers we use a functional style of programming
@@ -133,17 +141,20 @@ Absolute value are some cells whereas the phase term is a spokes target and some
 
 # ╔═╡ 83dd43ee-aa6d-414d-b4a2-dec98afc8aa1
 begin
-	img_abs = Float32.(Gray.(testimage("blobs")))[1:201, 1:201]
-	img_phase = Float32.(testimage("resolution_test_512"))[140:340, 250:450]
+	img = resample(Float32.(channelview(load("assets/cell.jpg"))), (3, 200, 200))
+	img_abs = img[2,:, :]
+	img_phase = img[3, :, :]
 
-	object = img_abs .* cispi.(2 .* img_phase)
+	object = img_abs .* cispi.(2f0 .* img_phase)
 	complex_show(object);
 end
 
+# ╔═╡ 52b52c55-ad17-4463-9582-83b82075a555
+
+
 # ╔═╡ a86151ed-c915-465b-af67-dee7a552e58c
 md"## Make a probe
-Let's choose a gaussian probe despite it's not very optimal for Ptychography
-
+Generate an illumination profile (=probe).
 "
 
 # ╔═╡ 3394318c-7b7c-4720-8822-f7cc1bf3645f
@@ -318,8 +329,10 @@ md"Ptychogram size: $(round(sizeof(reconstruction.ptychogram) / 2^20, digits=2))
 # ╔═╡ Cell order:
 # ╠═5efb56cc-81c7-11ec-2b28-e71f25e0d443
 # ╠═8b2e821a-cde0-4eba-ba1b-b176456cf667
+# ╠═564c2e28-7dfc-4822-aa6c-a6002a23f9cb
 # ╟─520b96b2-e35d-4820-8d4b-fbedd962fd92
 # ╟─89773bf9-3c7d-400a-9cef-46d6d97a4635
+# ╟─1f7a6cce-4e3c-4c1b-b2fb-0f1c33591249
 # ╟─6b336959-a3e4-42ad-8fe5-63f3f91f1f61
 # ╟─0a748b81-435c-411a-ad51-c128fe2e2552
 # ╟─0f1f8cfa-477c-4133-b2c4-0e39138893d1
@@ -333,6 +346,7 @@ md"Ptychogram size: $(round(sizeof(reconstruction.ptychogram) / 2^20, digits=2))
 # ╠═53a974c3-82b0-4195-a777-c6e2ec8af7cd
 # ╟─d2ce7638-9765-4752-b4b5-953ef7d43003
 # ╠═83dd43ee-aa6d-414d-b4a2-dec98afc8aa1
+# ╠═52b52c55-ad17-4463-9582-83b82075a555
 # ╟─a86151ed-c915-465b-af67-dee7a552e58c
 # ╠═3394318c-7b7c-4720-8822-f7cc1bf3645f
 # ╠═73b8c142-df52-4ed2-b35d-3d9f1b1ae707
