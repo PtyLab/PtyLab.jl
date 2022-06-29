@@ -182,7 +182,7 @@ size(ptychogram)
 
 # ╔═╡ e49cd149-eb2d-4b6e-9530-da00b6d79826
 md"### Functional Style of programming
-`Fraunhofer` assembles two functions `o2d` and `d2o` which (under the hood) store the phase functions, the FFT plan, buffer, etc.
+`Fraunhofer` assembles two functions `object2detector` and `detector2object` which (under the hood) store the phase functions, the FFT plan, buffer, etc.
 
 Hence, an application works completely allocation free and very efficiently.
 
@@ -191,7 +191,7 @@ An iterative reconstruction, such as ePIE, needs very efficient functions in the
 
 # ╔═╡ 4c47631a-1a7f-46f1-8d11-fb3d5d2f99de
 # object2detector, detector2object
-o2d, d2o = Fraunhofer(probe, fftshiftFlag=true);
+object2detector, detector2object = Fraunhofer(probe, fftshiftFlag=true);
 
 # ╔═╡ 6cb98beb-eeaf-48d2-9dbd-70e81015f09b
 md"## Simulate!"
@@ -199,7 +199,7 @@ md"## Simulate!"
 # ╔═╡ f276663f-21b7-45e6-97f6-4b0b841dcdde
 for (i, t) in enumerate(grr.tiles)
 	tile = view(object, t.i₁:t.i₂,  t.j₁:t.j₂)
-    ptychogram[:, :, i] = poisson(abs2.(o2d(tile .* probe)), 1000)
+    ptychogram[:, :, i] = poisson(abs2.(object2detector(tile .* probe)), 1000)
 end
 
 # ╔═╡ 5b7f8494-a417-4f0c-a9c3-5fd2a87df673

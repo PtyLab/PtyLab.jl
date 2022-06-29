@@ -33,7 +33,7 @@ end
 # ╔═╡ 520b96b2-e35d-4820-8d4b-fbedd962fd92
 md"## PtyLab.jl - Ptychography Reconstruction
 
-Julia implementation of PtyLab.
+Julia implementation of PtyLab. Available on GitHub.
 
 ### Felix Wechsler
 * PhD student at the IPHT in Jena (Rainer Heintzmann's Lab)
@@ -61,7 +61,7 @@ $(LocalResource("assets/ptychography.png", :width => 700))
 # ╔═╡ 0a748b81-435c-411a-ad51-c128fe2e2552
 md"""
 $(LocalResource("assets/ptychography2.png", :width => 700))
-"""
+""";
 
 # ╔═╡ 0f1f8cfa-477c-4133-b2c4-0e39138893d1
 md"## PtyLab.jl
@@ -79,7 +79,7 @@ md"## Allocation-free programming
 * we need at lot (!) memory buffers to handle
 * To not confuse the buffers we use a functional style of programming
 
-For example, the operation *detector to object* (`detector2object`) and *object to detector* (`object2detector`) is required at each iteration.
+For example, the operation *detector to object* (`detector2object`) is required at each iteration.
 
 We create new functions which capture the outer variables.
 Because of [#15276](https://github.com/JuliaLang/julia/issues/15276) we use `let` blocks.
@@ -91,30 +91,21 @@ function Fraunhofer(arr::T) where T
 	p = plan_fft!(arr)
 	
     object2detector! = let  p=p
-				buffer_shift = similar(arr)
+							buffer_shift = similar(arr)
         function object2detector!(x)
             p * x
             x ./= ss
 			fftshift!(buffer_shift, x)
         end
     end
-
-    detector2object! = let  p_inv=inv(p)
-		 		buffer_shift = similar(arr)
-        function detector2object!(x)
-            p_inv * ifftshift!(buffer_shift, x)
-            buffer_shift .*= ss
-        end
-    end
-
-	return object2detector!, detector2object!
+	return object2detector!
 end
 
 # ╔═╡ a9499a36-a3a3-41d1-ae52-0f18db1de62a
 arr = randn(ComplexF32, (1024, 1024));
 
 # ╔═╡ e887ec5e-75ac-4d62-a84f-8e1f4e96bc98
-object2detector_, detector2object_ = Fraunhofer(arr);
+object2detector_ = Fraunhofer(arr);
 
 # ╔═╡ 798ea080-3a25-452f-880b-ae9ecc57e16a
 # ╠═╡ show_logs = false
@@ -128,10 +119,7 @@ The function call is allocation free!
 "
 
 # ╔═╡ 48081a97-4106-4ec5-84f7-410c3c335672
-@time object2detector_(detector2object_(arr));
-
-# ╔═╡ 53a974c3-82b0-4195-a777-c6e2ec8af7cd
-arr ≈ object2detector_(detector2object_(copy(arr)))
+@time object2detector_(arr);
 
 # ╔═╡ d2ce7638-9765-4752-b4b5-953ef7d43003
 md"# Load a Testimage
@@ -145,7 +133,7 @@ begin
 	img_abs = img[2,:, :]
 	img_phase = img[3, :, :]
 
-	object = img_abs .* cispi.(2f0 .* img_phase)
+	object = img_abs .* cispi.(1f0 .* sin.(range(0f0, 10f0, length=200)))
 	complex_show(object);
 end
 
@@ -306,7 +294,7 @@ params
 md"# Select an reconstruction algorithm"
 
 # ╔═╡ 8d395f98-3138-4084-b96e-805ab12335a3
-engine = PtyLab.ePIE(numIterations=50, betaObject=0.75f0, betaProbe=0.75f0)
+engine = PtyLab.ePIE(numIterations=200, betaObject=0.75f0, betaProbe=0.75f0)
 
 # ╔═╡ db005e37-ed08-4964-a806-e53bdc09f527
 
@@ -315,10 +303,14 @@ engine = PtyLab.ePIE(numIterations=50, betaObject=0.75f0, betaProbe=0.75f0)
 md"# Run the reconstruction"
 
 # ╔═╡ 50c991b3-02b6-48ae-8eeb-72d9321a9990
+# ╠═╡ show_logs = false
 @time p, o = PtyLab.reconstruct(engine, params, reconstruction);
 
 # ╔═╡ b7d2a8da-7f5c-4edd-b80d-59fef05bf692
-complex_show(select_region(Array(o)[:, :, 1,1,1,1], new_size=size(img_abs)))
+complex_show(select_region(Array(o)[:, :, 1,1,1,1] ./ sum(Array(o)[:, :, 1,1,1,1]), new_size=size(img_abs)))
+
+# ╔═╡ 903f5a13-e9eb-4951-9fd6-0af08b347bc5
+complex_show(select_region(object ./ sum(object), new_size=size(img_abs)))
 
 # ╔═╡ e04e73a2-28b0-4594-8a5e-eb97ded5b1a4
 complex_show(Array(p)[:, :, 1,1,1,1])
@@ -343,7 +335,6 @@ md"Ptychogram size: $(round(sizeof(reconstruction.ptychogram) / 2^20, digits=2))
 # ╠═798ea080-3a25-452f-880b-ae9ecc57e16a
 # ╟─87f623ca-c761-4a54-8eea-ac06c10ea7d1
 # ╠═48081a97-4106-4ec5-84f7-410c3c335672
-# ╠═53a974c3-82b0-4195-a777-c6e2ec8af7cd
 # ╟─d2ce7638-9765-4752-b4b5-953ef7d43003
 # ╠═83dd43ee-aa6d-414d-b4a2-dec98afc8aa1
 # ╠═52b52c55-ad17-4463-9582-83b82075a555
@@ -383,5 +374,6 @@ md"Ptychogram size: $(round(sizeof(reconstruction.ptychogram) / 2^20, digits=2))
 # ╟─d18269ae-2006-4ba9-b81e-edb2f504f208
 # ╠═50c991b3-02b6-48ae-8eeb-72d9321a9990
 # ╠═b7d2a8da-7f5c-4edd-b80d-59fef05bf692
+# ╠═903f5a13-e9eb-4951-9fd6-0af08b347bc5
 # ╠═e04e73a2-28b0-4594-8a5e-eb97ded5b1a4
 # ╟─ec87b2bd-d812-4cde-8cf2-70f16dc600cc
