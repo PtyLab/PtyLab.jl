@@ -28,7 +28,7 @@ Currently uses `plan_fft!` for in-place ffts. `FFTW_flags` is only passed to `pl
  ## Examples
  `arr` should be something like the ESW `rec.object[1:rec.Np, 1:rec.Np, ..] .* rec.probe`.
 ```julia-repl
-julia> o2d, d2o = Fraunhofer(arr)
+julia> object2detector, detector2object = Fraunhofer(arr)
 ```
 """
 function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEASURE) where T
@@ -40,30 +40,30 @@ function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEAS
     p = _plan_fft!_cuda_FFTW(T, arr, dims, FFTW_flags)
 
     # create object to detector 
-    o2d! = let p=p
-        function o2d!(x)
+    object2detector! = let p=p
+        function object2detector!(x)
             px = p * x
             px ./= ss
         end
     end
     # same with shift
-    o2ds = let p=p
-        function o2ds(x)
+    object2detectors = let p=p
+        function object2detectors(x)
             px = fftshift(p * x, dims)
             px ./= ss
         end
     end
 
     # create detector to object without shifts 
-    d2o! = let p_inv=inv(p)
-        function d2o!(x)
+    detector2object! = let p_inv=inv(p)
+        function detector2object!(x)
             px = p_inv * x
             px .*= ss 
         end
     end
 
-    d2os = let p_inv=inv(p)
-        function d2os(x)
+    detector2objects = let p_inv=inv(p)
+        function detector2objects(x)
             px = p_inv * ifftshift(x, dims)
             px .*= ss 
         end
@@ -72,8 +72,8 @@ function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEAS
 
     # return correct functions
     if fftshiftFlag 
-        return o2ds, d2os
+        return object2detectors, detector2objects
     else
-        return o2d!, d2o!
+        return object2detector!, detector2object!
     end
 end

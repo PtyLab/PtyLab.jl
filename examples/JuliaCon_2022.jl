@@ -79,7 +79,7 @@ md"## Allocation-free programming
 * we need at lot (!) memory buffers to handle
 * To not confuse the buffers we use a functional style of programming
 
-For example, the operation *detector to object* (`d2o`) and *object to detector* (`o2d`) is required at each iteration.
+For example, the operation *detector to object* (`detector2object`) and *object to detector* (`object2detector`) is required at each iteration.
 
 We create new functions which capture the outer variables.
 Because of [#15276](https://github.com/JuliaLang/julia/issues/15276) we use `let` blocks.
@@ -90,35 +90,35 @@ function Fraunhofer(arr::T) where T
 	ss = sqrt(size(arr, 1) * size(arr, 2))
 	p = plan_fft!(arr)
 	
-    o2d! = let  p=p
+    object2detector! = let  p=p
 				buffer_shift = similar(arr)
-        function o2d!(x)
+        function object2detector!(x)
             p * x
             x ./= ss
 			fftshift!(buffer_shift, x)
         end
     end
 
-    d2o! = let  p_inv=inv(p)
+    detector2object! = let  p_inv=inv(p)
 		 		buffer_shift = similar(arr)
-        function d2o!(x)
+        function detector2object!(x)
             p_inv * ifftshift!(buffer_shift, x)
             buffer_shift .*= ss
         end
     end
 
-	return o2d!, d2o!
+	return object2detector!, detector2object!
 end
 
 # ╔═╡ a9499a36-a3a3-41d1-ae52-0f18db1de62a
 arr = randn(ComplexF32, (1024, 1024));
 
 # ╔═╡ e887ec5e-75ac-4d62-a84f-8e1f4e96bc98
-o2d_, d2o_ = Fraunhofer(arr);
+object2detector_, detector2object_ = Fraunhofer(arr);
 
 # ╔═╡ 798ea080-3a25-452f-880b-ae9ecc57e16a
 # ╠═╡ show_logs = false
-@code_warntype o2d_(arr);
+@code_warntype object2detector_(arr);
 
 # ╔═╡ 87f623ca-c761-4a54-8eea-ac06c10ea7d1
 md"### Usage
@@ -128,10 +128,10 @@ The function call is allocation free!
 "
 
 # ╔═╡ 48081a97-4106-4ec5-84f7-410c3c335672
-@time o2d_(d2o_(arr));
+@time object2detector_(detector2object_(arr));
 
 # ╔═╡ 53a974c3-82b0-4195-a777-c6e2ec8af7cd
-arr ≈ o2d_(d2o_(copy(arr)))
+arr ≈ object2detector_(detector2object_(copy(arr)))
 
 # ╔═╡ d2ce7638-9765-4752-b4b5-953ef7d43003
 md"# Load a Testimage
@@ -213,7 +213,7 @@ size(ptychogram)
 
 # ╔═╡ 4c47631a-1a7f-46f1-8d11-fb3d5d2f99de
 # object2detector, detector2object
-o2d, d2o = PtyLab.Fraunhofer(probe, fftshiftFlag=true);
+object2detector, detector2object = PtyLab.Fraunhofer(probe, fftshiftFlag=true);
 
 # ╔═╡ 6cb98beb-eeaf-48d2-9dbd-70e81015f09b
 md"## Simulate!"
@@ -221,7 +221,7 @@ md"## Simulate!"
 # ╔═╡ f276663f-21b7-45e6-97f6-4b0b841dcdde
 for (i, t) in enumerate(grr.tiles)
 	tile = view(object, t.i₁:t.i₂,  t.j₁:t.j₂)
-    ptychogram[:, :, i] = poisson(abs2.(o2d(tile .* probe)), 1000)
+    ptychogram[:, :, i] = poisson(abs2.(object2detector(tile .* probe)), 1000)
 end
 
 # ╔═╡ 5b7f8494-a417-4f0c-a9c3-5fd2a87df673

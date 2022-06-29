@@ -12,10 +12,10 @@ function simulate()
 
     ptychogram = zeros(Float32, (tile_size..., length(grr.tiles)));
     p = Params()
-    o2d, d2o = Fraunhofer(probe, fftshiftFlag=true);
+    object2detector, detector2object = Fraunhofer(probe, fftshiftFlag=true);
     
     for (i, t) in enumerate(grr.tiles)
-        ptychogram[:, :, i] = abs2.(o2d(view(object, t.i₁:t.i₂,  t.j₁:t.j₂) .* probe))#, 200000)
+        ptychogram[:, :, i] = abs2.(object2detector(view(object, t.i₁:t.i₂,  t.j₁:t.j₂) .* probe))#, 200000)
     end
     
     
