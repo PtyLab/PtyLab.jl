@@ -17,6 +17,12 @@ The following features are implemented:
 
 The structure should be flexible to add more solvers, etc.
 
+
+## JuliaCon 2022
+<a  href="https://www.youtube.com/watch?v=pDp83OxBJ_I"><img src="docs/src/assets/juliacon.png"  width="300"></a>
+
+
+
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-pink.svg
 [docs-dev-url]: https://roflmaostc.github.io/PtyLab.jl/dev/
 
