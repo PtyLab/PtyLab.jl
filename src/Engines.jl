@@ -71,11 +71,11 @@ function IntensityProjection(rec::ReconstructionCPM{T}, params::Params) where T
 
             
     @warn "gimmel is currently estimated as `eps($T)`"
-    f! = let    intensityConstraint = params.intensityConstraint
-                gimmel = 100 .* eps(T)
-                abs2_buffer = similar(esw_temp, real(eltype(esw_temp)))
-                sum_buffer = similar(esw_temp, real(eltype(esw_temp)), (size(esw_temp, 1), size(esw_temp, 2), 1, 1, 1, 1))
-                frac_buffer = similar(sum_buffer) 
+    f! = let    intensityConstraint = params.intensityConstraint,
+                gimmel = 100 .* eps(T),
+                abs2_buffer = similar(esw_temp, real(eltype(esw_temp))),
+                sum_buffer = similar(esw_temp, real(eltype(esw_temp)), (size(esw_temp, 1), size(esw_temp, 2), 1, 1, 1, 1)),
+                frac_buffer = similar(sum_buffer)
         function f(esw, Imeasured)
             ESW = object2detector(esw)
             Iestimated = let

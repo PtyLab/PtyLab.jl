@@ -94,11 +94,11 @@ function createUpdateFunctions(engine::Union{ePIE{T}, zPIE{T}}, objectPatch, pro
     # the let statement is used such that the variables are available in the
     # functions as closures. The actualy operation is not meaningful but
     # instead we want to be sure to have the right shape 
-    probeUpdate = let   fracProbe = similar(objectPatch) 
-                        newProbe = similar(probe) 
-                        fracProbeDELTA = fracProbe .* DELTA
-                        sumBufferNewProbe = sum(fracProbeDELTA, dims=(3,4,6)) 
-                        abs2objectPatch = similar(objectPatch, real(eltype(objectPatch)))
+    probeUpdate = let   fracProbe = similar(objectPatch), 
+                        newProbe = similar(probe), 
+                        fracProbeDELTA = fracProbe .* DELTA,
+                        sumBufferNewProbe = sum(fracProbeDELTA, dims=(3,4,6)),
+                        abs2objectPatch = similar(objectPatch, real(eltype(objectPatch))),
                         sumabs2objectPatch = similar(abs2objectPatch, size(abs2objectPatch, 1), size(abs2objectPatch, 2),
                                                                       1, 1, 1, 1)
         function probeUpdate(objectPatch, probe, DELTA)
@@ -110,11 +110,11 @@ function createUpdateFunctions(engine::Union{ePIE{T}, zPIE{T}}, objectPatch, pro
         end
     end
    
-    objectPatchUpdate = let fracObject = similar(probe)
-                            newObject = similar(objectPatch) 
-                            fracObjectDELTA = fracObject .* DELTA
-                            sumBufferNewObject = sum(fracObjectDELTA, dims=(3,5,6))
-                            abs2probe = similar(probe, real(eltype(probe)))
+    objectPatchUpdate = let fracObject = similar(probe),
+                            newObject = similar(objectPatch),
+                            fracObjectDELTA = fracObject .* DELTA,
+                            sumBufferNewObject = sum(fracObjectDELTA, dims=(3,5,6)),
+                            abs2probe = similar(probe, real(eltype(probe))),
                             sumabs2probe = similar(abs2probe, size(abs2probe, 1), 
                                                    size(abs2probe, 2),
                                                    1, 1, 1, 1)
