@@ -9,7 +9,7 @@ Works within Jupyter and Pluto.
 function complex_show(cpx::AbstractArray{T, N}) where {T<:Complex, N}
     Tr = real(T)
 	ac = abs.(cpx)
-    HSV.(angle.(cpx)./Tr(2pi)*256, ones(Tr,size(cpx)), ac./maximum(ac))
+    HSV.(angle.(cpx)./Tr(2pi)*360, ones(Tr,size(cpx)), ac./maximum(ac))
 end
 
 
