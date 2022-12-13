@@ -15,6 +15,7 @@ function _loopUpdatePIE!(randPositionOrder, positions, Np, ptychogram,
 
     for positionIndex in posList 
         row, col = view(positions, :, positionIndex) 
+        #col, row = view(positions, :, positionIndex) 
             
         sy = row:(row + Np - 1)
         sx = col:(col + Np - 1)

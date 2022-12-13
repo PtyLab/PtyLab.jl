@@ -30,6 +30,7 @@ MicroscopyTools = "0.1"
 NDTools = "0.5"
 Parameters = "0.12"
 ProgressMeter = "1.7"
+julia = "1, 1.6,1.7,1.8"
 
 [extras]
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"

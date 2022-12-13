@@ -101,7 +101,7 @@ function ExperimentalDataCPM(fileName::String, T=Float32; Nd=nothing)
 
 
     # optional
-    d[:entrancePupilDiameter] = T(r_number("entrancePupilDiameter"))
+    d[:entrancePupilDiameter] = r_number("entrancePupilDiameter")
     d[:spectralDensity] = r_number("spectralDensity")
     d[:theta] = r_number("theta")
 

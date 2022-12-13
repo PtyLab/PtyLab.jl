@@ -136,7 +136,7 @@ function ReconstructionCPM(data::ExperimentalDataCPM{T}; copyPtychogram=true, cu
     d[:entrancePupilDiameter] = 
         let 
             if isnothing(d[:entrancePupilDiameter])
-                calc_Lp(calc_Np(d[:Nd]), d[:dxp])
+                calc_Lp(calc_Np(d[:Nd]), calc_dxp(d[:wavelength], d[:zo], d[:Ld])) / 3
             else 
                 d[:entrancePupilDiameter]
             end
