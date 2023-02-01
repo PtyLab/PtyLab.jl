@@ -6,11 +6,13 @@
 | [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
 
 # License
+Please read the [license](https://github.com/PtyLab/PtyLab.jl/blob/main/LICENSE.md) before usage!
+
 
 # PtyLab.jl
 
-Julia Implementation of PtyLab. PtyLab is a software for Ptychography reconstruction.
-
+Julia flavored implementation of PtyLab. PtyLab is a software for Ptychography reconstruction.
+Please [cite this arXiv for the moment](https://arxiv.org/abs/2301.06595).
 
 ## Installation
 Via the Julia-REPL:
