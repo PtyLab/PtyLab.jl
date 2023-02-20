@@ -1,39 +1,73 @@
-export complex_show, gray_show, show_grid 
+export simshow
+export show_grid
 
 """
-    complex_show(arr)
-
-Displays a complex array. Color encodes phase, brightness encodes magnitude.
+    simshow(arr; set_zero=false, set_one=false, γ=1, cmap=:gray)
+Displays a real valued array.
 Works within Jupyter and Pluto.
+# Keyword args
+The transforms are applied in that order.
+* `set_zero=false` subtracts the minimum to set minimum to 0
+* `set_one=true` divides by the maximum to set maximum to 1
+* `γ` applies a gamma correction
+* `cmap=:gray` applies a colormap provided by ColorSchemes.jl. If `cmap=:gray` simply `Colors.Gray` is used
+    and with different colormaps the result is an `Colors.RGB` element type.  
+    You can try `:jet`, `:deep`, `thermal` or different ones by reading the catalogue of ColorSchemes.jl
 """
-function complex_show(cpx::AbstractArray{T, N}) where {T<:Complex, N}
-    Tr = real(T)
-	ac = abs.(cpx)
-    HSV.(angle.(cpx)./Tr(2pi)*360, ones(Tr,size(cpx)), ac./maximum(ac))
+function simshow(arr::AbstractArray{T};
+                 set_zero=false, set_one=true,
+                 γ = one(T),
+                 cmap=:gray) where {T<:Real}
+
+    arr = set_zero ? arr .- minimum(arr) : arr
+
+    if set_one
+        m = maximum(arr)
+        if !iszero(m)
+            arr = arr ./ maximum(arr)
+        end
+    end
+
+    if !isone(γ)
+        arr = arr .^ γ
+    end
+
+    if cmap == :gray
+        Gray.(arr)
+    else
+        get(colorschemes[cmap], arr)
+    end
 end
 
 
 """
-    gray_show(arr; set_one=false, set_zero=false)
-
-Displays a real gray color array. Brightness encodes magnitude.
+    simshow(arr; γ=1)
+Displays a complex array. Color encodes phase, brightness encodes magnitude.
 Works within Jupyter and Pluto.
-
-## Keyword args
-* `set_one=false` divides by the maximum to set maximum to 1
-* `set_zero=false` subtracts the minimum to set minimum to 1
+# Keyword args
+* `γ` applies a gamma correction to the magnitude
 """
-function gray_show(arr; set_one=true, set_zero=false)
-    arr = set_zero ? arr .- minimum(arr) : arr
-    arr = set_one ? arr ./ maximum(arr) : arr
-    Gray.(arr)
+function simshow(arr::AbstractArray{T};
+                 γ=one(T), kwargs...) where (T<:Complex)
+
+    Tr = real(T)
+    # scale abs to 1
+    absarr = abs.(arr)
+    absarr ./= maximum(absarr)
+
+    if !isone(γ)
+        absarr .= absarr .^ γ
+    end
+
+    angarr = angle.(arr) ./ Tr(2pi) * Tr(360)
+
+    HSV.(angarr, one(Tr), absarr)
 end
 
 
 """
     show_grid(grr::PtyLab.GridRegularRand; only_points=false, thickness=2)
-
-Displays the `PtyLab.GridRegularRand`. 
+Displays the `PtyLab.GridRegularRand`.
 `only_points=true` displays anchor points otherwise lines.
 `thickness` is the thickness of the drawing
 """
@@ -50,5 +84,5 @@ function show_grid(grr::PtyLab.GridRegularRand; only_points=false, thickness=1)
             img[t.i₂:t.i₂+thickness-1, t.j₁:t.j₂] .= 1
         end
     end
-    gray_show(img) 
+    simshow(img)
 end
