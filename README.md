@@ -32,8 +32,14 @@ The following features are implemented:
 The structure should be flexible to add more solvers, etc.
 
 
+## Tutorials
+* [Real data reconstruction](examples/Introduction_real_data_reconstruction.ipynb)
+* [Simple simulation and reconstruction](examples/simple_simulation_and_reconstruction.ipynb)
+* [Another artificial simulation and reconstruction](examples/cuda_simulation_and_reconstruction.ipynb)
+
 
 ## JuliaCon 2022
+* [Pluto notebook](examples/JuliaCon_2022.jl) for this video
 <a  href="https://www.youtube.com/watch?v=pDp83OxBJ_I"><img src="docs/src/assets/juliacon.png"  width="300"></a>
 
 
