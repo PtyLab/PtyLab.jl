@@ -40,6 +40,7 @@ The structure should be flexible to add more solvers, etc.
 
 ## JuliaCon 2022
 * [Pluto notebook](examples/JuliaCon_2022.jl) for this video
+
 <a  href="https://www.youtube.com/watch?v=pDp83OxBJ_I"><img src="docs/src/assets/juliacon.png"  width="300"></a>
 
 
