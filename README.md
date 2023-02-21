@@ -1,7 +1,7 @@
 # PtyLab.jl
 
-Ptychography is a computational microscopy imaging technique to capture phase and amplitude of a illumination probe and an unknown sample.
-This is a Julia implementation of PtyLab which reconstructs datasets.
+Conventional Ptychography is a lensless microscopy imaging technique which captures a sequence of light diffraction patterns to solve the optical phase problem. The resulting datasets are large and can typically not directly be solved. Instead, iterative reconstruction algorithms with low runtime memory footprint are employed. Here we present PtyLab.jl, a software for ptychographic data analysis and demonstrate how a functional programming style in Julia allows for performant iterative algorithms.
+
 
 Please [see this arXiv article](https://arxiv.org/abs/2301.06595).
 
@@ -11,15 +11,27 @@ Please [see this arXiv article](https://arxiv.org/abs/2301.06595).
 | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
 
 # License
-Please read the [license](https://github.com/PtyLab/PtyLab.jl/blob/main/LICENSE.md) before usage!
-
+Please read the [license](https://github.com/PtyLab/PtyLab.jl/blob/main/LICENSE.md) before usage! 
+One important part is the use "for academic, non-commercial purposes" only.
 
 
 ## Installation
-Via the Julia-REPL:
+Via the [Julia-REPL](https://julialang.org/) add [PtyLab.jl](https://github.com/PtyLab/PtyLab.jl) with the following command:
 ```julia
 julia> ] add https://github.com/PtyLab/PtyLab.jl/
 ```
+
+To start the Jupyter notebooks, clone or download a [.zip](https://github.com/PtyLab/PtyLab.jl/archive/refs/heads/main.zip) of this repository. 
+Extract it.
+Then open a Julia REPL and type the following to install the Jupyter kernel:
+```julia
+julia> ] add IJulia
+
+julia> using IJulia
+
+julia> notebook()
+```
+A browser should open. Navigate to the location of the notebooks and open them.
 
 ## Feature Set
 Right now, only CP reconstruction works. For more functionality, please see the [PtyLab.m](https://github.com/PtyLab/PtyLab.m) and the [PtyLab.py](https://github.com/PtyLab/PtyLab.py).
