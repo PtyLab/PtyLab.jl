@@ -1,5 +1,11 @@
 # PtyLab.jl
 
+Ptychography is a computational microscopy imaging technique to capture phase and amplitude of a illumination probe and an unknown sample.
+This is a Julia implementation of PtyLab which reconstructs datasets.
+
+Please [see this arXiv article](https://arxiv.org/abs/2301.06595).
+
+
 | **Build Status**                          | **Code Coverage**               |
 |:-----------------------------------------:|:-------------------------------:|
 | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
@@ -8,10 +14,6 @@
 Please read the [license](https://github.com/PtyLab/PtyLab.jl/blob/main/LICENSE.md) before usage!
 
 
-# PtyLab.jl
-
-Julia flavored implementation of PtyLab. PtyLab is a software for Ptychography reconstruction.
-Please [cite this arXiv for the moment](https://arxiv.org/abs/2301.06595).
 
 ## Installation
 Via the Julia-REPL:
