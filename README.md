@@ -1,9 +1,8 @@
 # PtyLab.jl
 
-
-| **Documentation**                       | **Build Status**                          | **Code Coverage**               |
-|:---------------------------------------:|:-----------------------------------------:|:-------------------------------:|
-| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
+| **Build Status**                          | **Code Coverage**               |
+|:-----------------------------------------:|:-------------------------------:|
+| [![][CI-img]][CI-url] | [![][codecov-img]][codecov-url] |
 
 # License
 Please read the [license](https://github.com/PtyLab/PtyLab.jl/blob/main/LICENSE.md) before usage!
