@@ -11,11 +11,12 @@ function _loopUpdatePIE!(randPositionOrder, positions, Np, ptychogram,
 
 
     # random order of positions or not
-    posList = randPositionOrder ? randperm(size(positions, 1)) : (1:size(positions, 1))
+    posList = randPositionOrder ? randperm(size(positions, 2)) : (1:size(positions, 2))
 
+    @assert size(positions, 1) == 2 "encoder has shape $(size(encoder)) but needs to have tranposed shape!"
     for positionIndex in posList 
-        row, col = view(positions, positionIndex, :)
-            
+        row, col = view(positions, :, positionIndex) 
+
         sy = row:(row + Np - 1)
         sx = col:(col + Np - 1)
         # no copy necessary -> because esw immediately calculated
