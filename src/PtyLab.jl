@@ -24,7 +24,8 @@ using IndexFunArrays
 using Random
 
 
-using ColorSchemes
+using ImageShow 
+
 
  # CUDA acceleration
 using CUDA
