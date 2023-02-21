@@ -21,7 +21,7 @@ julia> ] add https://github.com/PtyLab/PtyLab.jl/
 ```
 
 ## Feature Set
-Right now, only CP reconstruction works.
+Right now, only CP reconstruction works. For more functionality, please see the [PtyLab.m](https://github.com/PtyLab/PtyLab.m) and the [PtyLab.py](https://github.com/PtyLab/PtyLab.py).
 
 The following features are implemented:
 * simple Ptychography reconstruction (loading from a .hdf5 file)
@@ -31,6 +31,7 @@ The following features are implemented:
 * regular randomized grid generation (for usage of a translation stages.
 
 The structure should be flexible to add more solvers, etc.
+
 
 
 ## JuliaCon 2022
