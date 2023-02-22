@@ -41,7 +41,7 @@ The following features are implemented:
 * ePIE
 * CUDA support
 * probe center of mass restriction
-* regular randomized grid generation (for usage of a translation stages.
+* regular randomized grid generation (for usage of translation stages)
 
 The structure should be flexible to add more solvers, etc.
 
