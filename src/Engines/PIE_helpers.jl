@@ -125,6 +125,3 @@ function _prepareBuffersAndFunctionsPIE(rec, params, engine::Union{ePIE, mPIE})
     return (intensityProjection!, updateFunctions,
             ptychogram, oldProbe, oldObjectPatch, esw, DELTA)
 end
-
-
-
