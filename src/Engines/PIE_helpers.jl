@@ -82,10 +82,10 @@ function _loopUpdatePIE!(engine, randPositionOrder, positions, Np, ptychogram,
         object[sy, sx, ..] .= newObjectPatch
 
         
-        if typeof(engine) == mPIE
-            if rand(1) > 0.95
-                updateFunctions.objectMomentumUpdate(object)
-                updateFunctions.probeMomentumUpdate(probe)
+        if engine isa mPIE
+            if rand() > 0.95
+                updateFunctions.objectMomentumUpdate!(object)
+                updateFunctions.probeMomentumUpdate!(probe)
             end
         end
     end 

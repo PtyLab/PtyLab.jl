@@ -84,23 +84,26 @@ function createUpdateFunctions(engine::mPIE{T}, objectPatch, probe, object, DELT
     end
 
 
-    objectMomentumUpdate! = let objectBuffer = similar(object),
-                                engine = engine
+    objectMomentumUpdate! = let objectBuffer = copy(object),
+                                engine = engine,
+                                gradient = similar(object),
+                                objectMomentum = zero.(gradient)
         function objectMomentumUpdate!(object)
-            gradient = reconstruction.objectBuffer - object
-            objectMomentum = (gradient .+ self.frictionM .* objectMomentum)
-            object .= (object .- engine.feedbackM .* self.reconstruction.objectMomentum)
+            gradient .= objectBuffer - object
+            objectMomentum .= (gradient .+ engine.frictionM .* objectMomentum)
+            object .= (object .- engine.feedbackM .* objectMomentum)
             objectBuffer .= object 
         end
     end
 
-    probeMomentumUpdate! = let probeBuffer = similar(probe)
-                               engine = engine
-        
+    probeMomentumUpdate! = let probeBuffer = copy(probe),
+                               engine = engine,
+                               gradient = similar(probeBuffer),
+                               probeMomentum = zero.(gradient)
         function probeMomentum!(probe)
-            gradient = probeBuffer .- reconstruction.probe
-            probeMomentum = gradient .+ engine.frictionM .* self.reconstruction.probeMomentum
-            probe .= probe .- engine.feedbackM .* engine.probeMomentum
+            gradient .= probeBuffer .- probe
+            probeMomentum .= gradient .+ engine.frictionM .* probeMomentum
+            probe .= probe .- engine.feedbackM .* probeMomentum
             probeBuffer .= probe
         end
     end
