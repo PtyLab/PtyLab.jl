@@ -12,7 +12,7 @@ Please [see this arXiv article](https://arxiv.org/abs/2301.06595).
 
 # License
 Please read the [license](https://github.com/PtyLab/PtyLab.jl/blob/main/LICENSE.md) before usage! 
-One important part is the use "for academic, non-commercial purposes" only.
+One important part is the use of this software "for academic, non-commercial purposes" only.
 
 
 ## Installation
