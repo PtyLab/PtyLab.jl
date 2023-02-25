@@ -40,14 +40,13 @@ function simulate()
 end
 
 
-function reconstruct()
+function reconstruct(engine)
     
     experimentalData = ExperimentalDataCPM("simulated_ptychography.hdf5");
     
     reconstruction = ReconstructionCPM(experimentalData);
     reconstruction = PtyLab.initializeObjectProbe!(reconstruction);
     
-    engine = PtyLab.ePIE(betaProbe=0.75f0, betaObject=0.75f0, numIterations=50)
     params2 = Params(fftshiftFlag=false, transposePtychogram=false, comStabilizationSwitch=true)
 
     
@@ -61,37 +60,45 @@ function reconstruct()
 
 @testset "Test forward simulation with reconstruction" begin
     object_gt, probe_gt = simulate()
-    object, probe = reconstruct()
-
-
-    # probe preparation for comparison
-    p_1D_1 = real.(probe[:, 35, 1,1,1,1] ./ sum(probe))
-    p_gt_1D_1 = real.(probe_gt[:, 35] ./ sum(probe_gt))
-
-    p_1D_2 = real.(probe[30, :, 1,1,1,1] ./ sum(probe))
-    p_gt_1D_2 = real.(probe_gt[30, :] ./ sum(probe_gt))
+    object, probe = reconstruct(PtyLab.ePIE(betaProbe=0.75f0, betaObject=0.75f0, numIterations=50))
+    objectm, probem = reconstruct(PtyLab.mPIE(betaProbe=0.25f0, betaObject=0.25f0, numIterations=20))
 
 
 
-    @test p_1D_1 .+ 10 ≈ p_gt_1D_1 .+ 10
-    @test p_1D_2 .+ 10 ≈ p_gt_1D_2 .+ 10
+    function compare(object_gt, probe_gt, object, probe)
+        # probe preparation for comparison
+        p_1D_1 = real.(probe[:, 35, 1,1,1,1] ./ sum(probe))
+        p_gt_1D_1 = real.(probe_gt[:, 35] ./ sum(probe_gt))
 
-    object_comp = object[50+50:150+50, 100-20:150-10, 1,1,1,1] 
-    
-    object_comp ./= sum(object_comp)
-    
-    
-    object_comp = real.(object_comp)
-    object_comp ./= sum(object_comp)
-    
-    o1, o2 = (45, 45 - 10)
-    
-    object_gt_comp = object_gt[o1:o1+100, o2:o2+60]
-    object_gt_comp ./= sum(object_gt_comp)
-    
-    object_gt_comp = real.(object_gt_comp)
-    object_gt_comp ./= sum(object_gt_comp)
-    
-    
-    @test all(≈(1 .+ real.(object_gt_comp), 1 .+ real.(object_comp), rtol=2.1e-4))
+        p_1D_2 = real.(probe[30, :, 1,1,1,1] ./ sum(probe))
+        p_gt_1D_2 = real.(probe_gt[30, :] ./ sum(probe_gt))
+
+
+
+        @test p_1D_1 .+ 10 ≈ p_gt_1D_1 .+ 10
+        @test p_1D_2 .+ 10 ≈ p_gt_1D_2 .+ 10
+
+        object_comp = object[50+50:150+50, 100-20:150-10, 1,1,1,1] 
+        
+        object_comp ./= sum(object_comp)
+        
+        
+        object_comp = real.(object_comp)
+        object_comp ./= sum(object_comp)
+        
+        o1, o2 = (45, 45 - 10)
+        
+        object_gt_comp = object_gt[o1:o1+100, o2:o2+60]
+        object_gt_comp ./= sum(object_gt_comp)
+        
+        object_gt_comp = real.(object_gt_comp)
+        object_gt_comp ./= sum(object_gt_comp)
+        
+        
+        @test all(≈(1 .+ real.(object_gt_comp), 1 .+ real.(object_comp), rtol=2.1e-4))
+    end
+
+
+    compare(object_gt, probe_gt, object, probe)
+    compare(object_gt, probe_gt, objectm, probem)
 end

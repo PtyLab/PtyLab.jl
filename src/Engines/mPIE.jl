@@ -46,7 +46,7 @@ function createUpdateFunctions(engine::mPIE{T}, objectPatch, probe, object, DELT
     probeUpdate = let   fracProbe = similar(objectPatch), 
                         newProbe = similar(probe), 
                         fracProbeDELTA = fracProbe .* DELTA,
-                        sumBufferNewProbe = sum(fracProbeDELTA, dims=(5,)),
+                        sumBufferNewProbe = sum(fracProbeDELTA, dims=(3,4,6)),
                         abs2objectPatch = similar(objectPatch, real(eltype(objectPatch))),
                         sumabs2objectPatch = similar(abs2objectPatch, size(abs2objectPatch, 1), size(abs2objectPatch, 2),
                                                                       1, 1, 1, 1),
@@ -54,7 +54,6 @@ function createUpdateFunctions(engine::mPIE{T}, objectPatch, probe, object, DELT
         function probeUpdate(objectPatch, probe, DELTA)
             abs2objectPatch .= abs2.(objectPatch)
             Omax = maximum(sum(abs2objectPatch, dims=(3, 4, 5, 6)), dims=(1, 2))
-            fracProbe .= conj.(objectPatch) ./ maximum(sum!(sumabs2objectPatch, abs2objectPatch))
             fracProbe .= conj.(objectPatch) ./ 
                             (engine.alphaProbe .* Omax .+ (1 .- engine.alphaProbe) .* abs2objectPatch)
             fracProbeDELTA .= fracProbe .* DELTA
@@ -68,7 +67,7 @@ function createUpdateFunctions(engine::mPIE{T}, objectPatch, probe, object, DELT
                             fracObject = similar(probe),
                             newObject = similar(objectPatch),
                             fracObjectDELTA = fracObject .* DELTA,
-                            sumBufferNewObject = sum(fracObjectDELTA, dims=(4,)),
+                            sumBufferNewObject = sum(fracObjectDELTA, dims=(3,5,6)),
                             abs2probe = similar(probe, real(eltype(probe))),
                             sumabs2probe = similar(abs2probe, size(abs2probe, 1), 
                                                    size(abs2probe, 2),
