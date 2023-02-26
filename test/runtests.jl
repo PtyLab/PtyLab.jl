@@ -5,6 +5,8 @@ using FFTW
 using IndexFunArrays
 using TestImages
 using HDF5
+using Random
+Random.seed!(42)
 
  # tests
 include("utils.jl")
