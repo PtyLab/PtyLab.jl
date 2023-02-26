@@ -29,4 +29,5 @@ Those are some settings which are shared in between different optimizers.
     propagatorType::F = Fraunhofer
     randPositionOrder::Bool = true 
     comStabilizationSwitch::Bool = true
+    probePowerCorrectionSwitch:: Bool = false 
 end

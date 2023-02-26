@@ -30,6 +30,11 @@ function enforceConstraints!(rec::ReconstructionCPM{T}, params)  where T
         # shift in direction to the center
         rec.probe .= circshift(rec.probe, offset);
     end
+
+    if params.probePowerCorrectionSwitch
+        # we could buffer the denominator, but not really worth it since
+        rec.probe .= rec.probe ./ sqrt.(sum(rec.probe .* conj.(rec.probe))) * sqrt.(maximum(sum(rec.ptychogram, dims=(1, 2)))) 
+    end
 end
 
 
