@@ -19,7 +19,7 @@ end
 
 
 """
-    Fraunhofer(arr; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEASURE)
+    Fraunhofer(arr; fftshiftSwitch=false, dims=(1,2), FFTW_flags=FFTW.MEASURE)
 
 Returns two functions `object2detector, detector2object` which can propagate `asw` with Fraunhofer assumption
 efficiently between object and detector back and forth
@@ -31,7 +31,7 @@ Currently uses `plan_fft!` for in-place ffts. `FFTW_flags` is only passed to `pl
 julia> object2detector, detector2object = Fraunhofer(arr)
 ```
 """
-function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEASURE) where T
+function Fraunhofer(arr::T; fftshiftSwitch=false, dims=(1,2), FFTW_flags=FFTW.MEASURE) where T
 
 
     ss = sqrt(size(arr, 1) * size(arr, 2))
@@ -71,7 +71,7 @@ function Fraunhofer(arr::T; fftshiftFlag=false, dims=(1,2), FFTW_flags=FFTW.MEAS
 
 
     # return correct functions
-    if fftshiftFlag 
+    if fftshiftSwitch 
         return object2detectors, detector2objects
     else
         return object2detector!, detector2object!

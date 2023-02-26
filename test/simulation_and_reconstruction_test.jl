@@ -12,7 +12,7 @@ function simulate()
 
     ptychogram = zeros(Float32, (tile_size..., length(grr.tiles)));
     p = Params()
-    object2detector, detector2object = Fraunhofer(probe, fftshiftFlag=true);
+    object2detector, detector2object = Fraunhofer(probe, fftshiftSwitch=true);
     
     for (i, t) in enumerate(grr.tiles)
         ptychogram[:, :, i] = abs2.(object2detector(view(object, t.i₁:t.i₂,  t.j₁:t.j₂) .* probe))#, 200000)
@@ -47,7 +47,7 @@ function reconstruct(engine)
     reconstruction = ReconstructionCPM(experimentalData);
     reconstruction = PtyLab.initializeObjectProbe!(reconstruction);
     
-    params2 = Params(fftshiftFlag=false, transposePtychogram=false, comStabilizationSwitch=true)
+    params2 = Params(fftshiftSwitch=false, transposePtychogram=false, comStabilizationSwitch=true)
 
     
     reconstruction = PtyLab.initializeObjectProbe!(reconstruction);

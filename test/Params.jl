@@ -1,6 +1,6 @@
 @testset "Params" begin
     p = Params()
-    @test p.fftshiftFlag == false
+    @test p.fftshiftSwitch == false
     @test p.propagatorType == Fraunhofer
 
 

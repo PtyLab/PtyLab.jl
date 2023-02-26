@@ -103,7 +103,7 @@ function _prepareBuffersAndFunctionsPIE(rec, params, engine::Union{ePIE, mPIE})
     intensityProjection! = IntensityProjection(rec, params)
 
     # get two function which maybe shift depending on the flag             \
-    maybe_fftshift, maybe_ifftshift = getMaybeFftshifts(! params.fftshiftFlag) 
+    maybe_fftshift, maybe_ifftshift = getMaybeFftshifts(! params.fftshiftSwitch) 
 
     # ptychogram = rec.ptychogram
     ptychogram = maybe_ifftshift(rec.ptychogram)

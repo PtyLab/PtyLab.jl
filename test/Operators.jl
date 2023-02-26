@@ -8,7 +8,7 @@
 
     
          
-        object2detector, detector2object = Fraunhofer(arr, fftshiftFlag=true)
+        object2detector, detector2object = Fraunhofer(arr, fftshiftSwitch=true)
         @test object2detector(copy(arr)) ≈ fftshift(fft(arr, (1,2)), (1,2)) ./ ss 
         @test detector2object(copy(arr)) ≈ ifft(ifftshift(arr, (1,2)), (1,2)) .* ss 
         

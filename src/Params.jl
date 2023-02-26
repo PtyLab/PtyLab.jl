@@ -14,7 +14,7 @@ Those are some settings which are shared in between different optimizers.
 
 # Fields
 
-* `fftshiftFlag::Bool = false`: `false` means that the ptychogram is already in the center 
+* `fftshiftSwitch::Bool = false`: `false` means that the ptychogram is already in the center 
 * `propagatorType = Fraunhofer`: Default is `Fraunhofer`. See other Operator options. 
 * `transposePtychogram::Bool = true`: swap the first two dimensions of the ptychogram (transpose the sensor)
 * `randPositionOrder::Bool = true` randomly draw the encoder positions during reconstruction
@@ -23,7 +23,7 @@ Those are some settings which are shared in between different optimizers.
 """
 @with_kw struct Params{T<:IntensityConstraint, F}
     # Default settings for switches, settings that involve how things are computed
-    fftshiftFlag::Bool = false
+    fftshiftSwitch::Bool = false
     transposePtychogram::Bool = true
     intensityConstraint::T = IntensityConstraintStandard()
     propagatorType::F = Fraunhofer

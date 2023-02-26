@@ -201,7 +201,7 @@ size(ptychogram)
 
 # ╔═╡ 4c47631a-1a7f-46f1-8d11-fb3d5d2f99de
 # object2detector, detector2object
-object2detector, detector2object = PtyLab.Fraunhofer(probe, fftshiftFlag=true);
+object2detector, detector2object = PtyLab.Fraunhofer(probe, fftshiftSwitch=true);
 
 # ╔═╡ 6cb98beb-eeaf-48d2-9dbd-70e81015f09b
 md"## Simulate!"
