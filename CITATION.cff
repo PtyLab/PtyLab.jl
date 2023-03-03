@@ -1,10 +1,38 @@
-@article{https://doi.org/10.48550/arxiv.2301.06595,
-  doi = {10.48550/ARXIV.2301.06595},
-  url = {https://arxiv.org/abs/2301.06595},
-  author = {Loetgering, Lars and Du, Mengqi and Flaes, Dirk Boonzajer and Aidukas, Tomas and Wechsler, Felix and Molina, Daniel S. Penagos and Rose, Max and Pelekanidis, Antonios and Eschen, Wilhelm and Hess, Jürgen and Wilhein, Thomas and Heintzmann, Rainer and Rothhardt, Jan and Witte, Stefan},
-  keywords = {Computational Physics (physics.comp-ph), Image and Video Processing (eess.IV), Optics (physics.optics), FOS: Physical sciences, FOS: Physical sciences, FOS: Electrical engineering, electronic engineering, information engineering, FOS: Electrical engineering, electronic engineering, information engineering},
-  title = {PtyLab.m/py/jl: a cross-platform, open-source inverse modeling toolbox for conventional and Fourier ptychography},
-  publisher = {arXiv},
-  year = {2023},
-  copyright = {Creative Commons Attribution 4.0 International}
-}
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Loetgering"
+  given-names: "Lars"
+- family-names: "Du"
+  given-names: "Mengqi"
+- family-names: "Bot"
+  given-names: "Hew"
+- family-names: "Flaes"
+  given-names: "Dirk Boonzajer"
+- family-names: "Aidukas"
+  given-names: "Tomas"
+- family-names: "Wechsler"
+  given-names: "Felix"
+- family-names: "Molina"
+  given-names: "Daniel S. Penagos"
+- family-names: "Rose"
+  given-names: "Max"
+- family-names: "Pelekanidis"
+  given-names: "Antonios"
+- family-names: "Eschen"
+  given-names: "Wilhelm"
+- family-names: "Hess"
+  given-names: "Jürgen"
+- family-names: "Wilhein"
+  given-names: "Thomas"
+- family-names: "Heintzmann"
+  given-names: "Rainer"
+- family-names: "Rothhardt"
+  given-names: "Jan"
+- family-names: "Witte"
+  given-names: "Stefan"
+title: "PtyLab.m/py/jl: a cross-platform, open-source inverse modeling toolbox for conventional and Fourier ptychography"
+version: 0.1.0
+doi: https://doi.org/10.48550/arXiv.2301.06595
+date-released: 2023-01-16
+url: "https://github.com/PtyLab/
