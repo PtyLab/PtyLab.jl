@@ -33,6 +33,6 @@ authors:
   given-names: "Stefan"
 title: "PtyLab.m/py/jl: a cross-platform, open-source inverse modeling toolbox for conventional and Fourier ptychography"
 version: 0.1.0
-doi: https://doi.org/10.48550/arXiv.2301.06595
+doi: 10.48550/arXiv.2301.06595
 date-released: 2023-01-16
-url: "https://github.com/PtyLab/
+url: "https://github.com/PtyLab/"
