@@ -69,7 +69,7 @@ The structure should be flexible to add more solvers, etc.
   year = {2023},
   copyright = {Creative Commons Attribution 4.0 International}
 }
-``
+```
 
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-pink.svg
 [docs-dev-url]: https://ptylab.github.io/PtyLab.jl/dev/
