@@ -51,6 +51,9 @@ The structure should be flexible to add more solvers, etc.
 * [Simple simulation and reconstruction](examples/simple_simulation_and_reconstruction.ipynb)
 * [Another artificial simulation and reconstruction](examples/cuda_simulation_and_reconstruction.ipynb)
 
+## Questions?
+Feel free to open an issue if anything does not work or is unclear!
+You can also join [my conference room](https://epfl.zoom.us/j/9384091974). Give me a minute to join!
 
 ## JuliaCon 2022
 * [Pluto notebook](examples/JuliaCon_2022.jl) for this video
