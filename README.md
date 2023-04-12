@@ -3,7 +3,7 @@
 Conventional Ptychography is a lensless microscopy imaging technique which captures a sequence of light diffraction patterns to solve the optical phase problem. The resulting datasets are large and can typically not directly be solved. Instead, iterative reconstruction algorithms with low runtime memory footprint are employed. Here we present PtyLab.jl, a software for ptychographic data analysis and demonstrate how a functional programming style in Julia allows for performant iterative algorithms.
 
 
-Please [see this arXiv article](https://arxiv.org/abs/2301.06595).
+See this [Optics Express article](https://opg.optica.org/oe/fulltext.cfm?uri=oe-31-9-13763&id=529026).
 
 
 | **Build Status**                          | **Code Coverage**               |
