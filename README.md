@@ -60,17 +60,23 @@ You can also join [my conference room](https://epfl.zoom.us/j/9384091974). Give 
 
 <a  href="https://www.youtube.com/watch?v=pDp83OxBJ_I"><img src="docs/src/assets/juliacon.png"  width="300"></a>
 
-## Citing
+## More Information and Citation
+See this [Optics express article](https://opg.optica.org/oe/fulltext.cfm?uri=oe-31-9-13763&id=529026).
 ```
-@misc{https://doi.org/10.48550/arxiv.2301.06595,
-  doi = {10.48550/ARXIV.2301.06595},
-  url = {https://arxiv.org/abs/2301.06595},
-  author = {Loetgering, Lars and Du, Mengqi and Flaes, Dirk Boonzajer and Aidukas, Tomas and Wechsler, Felix and Molina, Daniel S. Penagos and Rose, Max and Pelekanidis, Antonios and Eschen, Wilhelm and Hess, Jürgen and Wilhein, Thomas and Heintzmann, Rainer and Rothhardt, Jan and Witte, Stefan},
-  keywords = {Computational Physics (physics.comp-ph), Image and Video Processing (eess.IV), Optics (physics.optics), FOS: Physical sciences, FOS: Physical sciences, FOS: Electrical engineering, electronic engineering, information engineering, FOS: Electrical engineering, electronic engineering, information engineering},
-  title = {PtyLab.m/py/jl: a cross-platform, open-source inverse modeling toolbox for conventional and Fourier ptychography},
-  publisher = {arXiv},
-  year = {2023},
-  copyright = {Creative Commons Attribution 4.0 International}
+@article{Loetgering:23,
+author = {Lars Loetgering and Mengqi Du and Dirk Boonzajer Flaes and Tomas Aidukas and Felix Wechsler and Daniel S. Penagos Molina and Max Rose and Antonios Pelekanidis and Wilhelm Eschen and J\"{u}rgen Hess and Thomas Wilhein and Rainer Heintzmann and Jan Rothhardt and Stefan Witte},
+journal = {Opt. Express},
+keywords = {Aperture synthesis; Imaging techniques; Optical coherence tomography; Phase imaging; Phase retrieval; Scanning electron microscopy},
+number = {9},
+pages = {13763--13797},
+publisher = {Optica Publishing Group},
+title = {PtyLab.m/py/jl: a cross-platform, open-source inverse modeling toolbox for conventional and Fourier ptychography},
+volume = {31},
+month = {Apr},
+year = {2023},
+url = {https://opg.optica.org/oe/abstract.cfm?URI=oe-31-9-13763},
+doi = {10.1364/OE.485370},
+abstract = {Conventional (CP) and Fourier (FP) ptychography have emerged as versatile quantitative phase imaging techniques. While the main application cases for each technique are different, namely lens-less short wavelength imaging for CP and lens-based visible light imaging for FP, both methods share a common algorithmic ground. CP and FP have in part independently evolved to include experimentally robust forward models and inversion techniques. This separation has resulted in a plethora of algorithmic extensions, some of which have not crossed the boundary from one modality to the other. Here, we present an open source, cross-platform software, called PtyLab, enabling both CP and FP data analysis in a unified framework. With this framework, we aim to facilitate and accelerate cross-pollination between the two techniques. Moreover, the availability in Matlab, Python, and Julia will set a low barrier to enter each field.},
 }
 ```
 
