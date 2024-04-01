@@ -1,7 +1,7 @@
 name = "PtyLab"
 uuid = "81acdcc5-82ff-4242-81ec-b83d268fd5e7"
 authors = ["roflmaostc <fxw+git@mailbox.org>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
@@ -33,7 +33,7 @@ ImageIO = "0.6"
 ImageShow = "0.3"
 IndexFunArrays = "0.2"
 MicroscopyTools = "0.1"
-NDTools = "0.5"
+NDTools = "0.5, 0.6"
 Parameters = "0.12"
 ProgressMeter = "1.7"
 julia = "1, 1.6,1.7,1.8, 1.9, 1.10"
